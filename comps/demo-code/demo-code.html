@@ -2,15 +2,23 @@
   <l-m src="/nos/n-icon/n-icon.html"></l-m>
   <style>
     :host {
+      position: relative;
       display: block;
       container-type: inline-size; /* 启用基于内联尺寸（通常是宽度）的容器查询 */
       border-radius: 8px;
       border: 1px solid var(--md-sys-color-on-normal);
       overflow: hidden;
+      min-height: 300px;
     }
 
     .outer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
       display: flex;
+      height: 100%;
     }
 
     @container (max-width: 640px) {
@@ -21,6 +29,8 @@
 
     .container {
       flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     .container {
@@ -54,12 +64,15 @@
     }
 
     .content {
-      padding: 8px;
-      min-height: 260px;
+      position: relative;
+      flex: 1;
     }
 
     iframe {
       display: block;
+      position: absolute;
+      left: 0;
+      top: 0;
       width: 100%;
       height: 100%;
       border: none;
@@ -68,7 +81,14 @@
   <div class="outer">
     <div class="container">
       <div class="top-bar"></div>
-      <div class="content">demo-code</div>
+      <div class="content">
+        <o-if :value="previewPath">
+          <iframe
+            attr:src="'./code.html?totalHash=' + totalHash + '&mainFilePath=' + mainFilePath"
+            id="code-frame"
+          ></iframe>
+        </o-if>
+      </div>
     </div>
     <div class="container">
       <div class="top-bar">
@@ -87,8 +107,9 @@
         </o-if>
         <o-else-if :value="frameId">
           <iframe
+            id="writer-frame"
             attr:src="'./writer.html?frameId=' + frameId"
-            frameborder="0"
+            src="./code.html"
           ></iframe>
         </o-else-if>
       </div>
@@ -102,8 +123,10 @@
       return {
         tag: "o-demo-code",
         data: {
+          mainFilePath: null,
           previewPath: null, // 预览路径
           frameId: null, // 组件id
+          totalHash: null,
         },
         proto: {
           clickReload() {
@@ -118,33 +141,44 @@
             const templates = this.all("template");
 
             const files = await Promise.all(
-              templates.map(async (temp) => {
-                const path = temp.attr("path");
-                const isComponent = temp.attr("component") !== null;
-                const isPage = temp.attr("page") !== null;
+              templates
+                .map(async (temp) => {
+                  const path = temp.attr("path");
 
-                let content = temp.html;
+                  if (!path) {
+                    return;
+                  }
 
-                // 获取内容hash
-                const contentHash = await getHash(content);
+                  const isComponent = temp.attr("component") !== null;
+                  const isPage = temp.attr("page") !== null;
 
-                if (!isComponent && !isPage) {
-                  // 加上样式
-                  content += `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" />`;
-                  content += `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/theme.css" />`;
-                  content =
-                    `<script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"><\/script>` +
-                    content;
-                }
+                  let content = temp.html;
 
-                return {
-                  contentHash,
-                  path,
-                  content,
-                  isComponent,
-                  isPage,
-                };
-              }),
+                  // 获取内容hash
+                  const contentHash = await getHash(content);
+
+                  if (!isComponent && !isPage) {
+                    // 加上样式
+                    content =
+                      `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" />` +
+                      content;
+                    content =
+                      `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/theme.css" />` +
+                      content;
+                    content =
+                      `<script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"><\/script>` +
+                      content;
+                  }
+
+                  return {
+                    contentHash,
+                    path,
+                    content,
+                    isComponent,
+                    isPage,
+                  };
+                })
+                .filter((item) => !!item),
             );
 
             // 计算总hash
@@ -160,15 +194,24 @@
           async initPreview() {
             const data = await this.getFileContent();
 
+            this.totalHash = data.totalHash;
+
             // 等待系统安装完成
             await this._systemInstalled;
 
             // 传递文件到对面的writer.html
-            this.shadow.$("iframe").ele.contentWindow.postMessage({
+            this.shadow.$("#writer-frame").ele.contentWindow.postMessage({
               type: "get-file-content",
               data,
             });
-            {
+
+            const mainFileData = data.files.find(
+              (item) => !item.isPage && !item.isComponent,
+            );
+
+            this.mainFilePath = mainFileData.path;
+
+            await new Promise((resolve) => {
               let f;
               $(window).on(
                 "message",
@@ -177,13 +220,14 @@
                     e.data.type === "preview-url" &&
                     e.data.frameId === this.frameId
                   ) {
-                    this.previewPath = e.data.url;
+                    this.previewPath = e.data.href + "/" + mainFileData.path;
                     // 移除事件监听
                     $(window).off("message", f);
+                    resolve();
                   }
                 }),
               );
-            }
+            });
           },
         },
         ready() {

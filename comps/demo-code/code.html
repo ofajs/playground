@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Code View</title>
+    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"></script>
+    <style>
+      html,
+      body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <monaco-editor></monaco-editor>
+    <script type="module">
+      const load = lm(import.meta);
+
+      const { get } = await load("/nos/fs/main.js");
+
+      await load("../monaco-editor/monaco-editor.html");
+
+      (async () => {
+        const editor = $("monaco-editor");
+
+        const params = new URLSearchParams(location.search);
+        const totalHash = params.get("totalHash");
+        const mainFilePath = params.get("mainFilePath");
+
+        const projectDirHandle = await get(`nos-demo-case/${totalHash}`);
+
+        if (!projectDirHandle) {
+          return;
+        }
+
+        const targetHandle = await projectDirHandle.get(mainFilePath);
+
+        const content = await targetHandle.text();
+
+        editor.setValue(content);
+      })();
+    </script>
+  </body>
+</html>

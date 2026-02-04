@@ -72,9 +72,6 @@
             create: "dir",
           });
 
-          // 既不是页面也不是组件的文件，并且是html文件，作为预览文件
-          let previewPath = null;
-
           // 写入文件
           await Promise.all(
             data.files.map(async (item) => {
@@ -83,25 +80,17 @@
               });
 
               await fileHandle.write(item.content);
-
-              if (
-                !item.isPage &&
-                !item.isComponent &&
-                item.path.endsWith(".html")
-              ) {
-                previewPath = `/$${fileHandle.path}`;
-              }
             }),
           );
 
           // 返回预览地址
-          const urlObj = new URL(previewPath, import.meta.url);
+          const urlObj = new URL("/$" + cashDirHandle.path, import.meta.url);
 
           window.parent.postMessage(
             {
               type: "preview-url",
               totalHash: data.totalHash,
-              url: urlObj.href,
+              href: urlObj.href,
               frameId: new URLSearchParams(location.search).get("frameId"),
             },
             "*",
