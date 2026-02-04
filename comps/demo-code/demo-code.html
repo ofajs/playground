@@ -47,6 +47,7 @@
       font-size: 16px;
       border-radius: 20px;
       cursor: pointer;
+      color: var(--md-sys-color-on-primary-container);
     }
     .top-btn:hover {
       background-color: var(--md-sys-color-normal-container);
@@ -71,12 +72,14 @@
     </div>
     <div class="container">
       <div class="top-bar">
-        <div class="top-btn">
+        <div class="top-btn" on:click="clickReload">
           <n-icon icon="mdi:reload"></n-icon>
         </div>
-        <div class="top-btn">
-          <n-icon icon="majesticons:open"></n-icon>
-        </div>
+        <o-if :value="previewPath">
+          <a class="top-btn" attr:href="previewPath" target="_blank">
+            <n-icon icon="majesticons:open"></n-icon>
+          </a>
+        </o-if>
       </div>
       <div class="content">
         <o-if :value="previewPath">
@@ -103,6 +106,13 @@
           frameId: null, // 组件id
         },
         proto: {
+          clickReload() {
+            const url = this.previewPath;
+            this.previewPath = "";
+            setTimeout(() => {
+              this.previewPath = url;
+            }, 100);
+          },
           // 获取代码并进行格式化等操作
           async getFileContent() {
             const templates = this.all("template");
