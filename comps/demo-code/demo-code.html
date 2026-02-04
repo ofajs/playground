@@ -82,7 +82,7 @@
     <div class="container">
       <div class="top-bar"></div>
       <div class="content">
-        <o-if :value="previewPath">
+        <o-if :value="fsInitialized">
           <iframe
             attr:src="'./code.html?totalHash=' + totalHash + '&mainFilePath=' + mainFilePath"
             id="code-frame"
@@ -127,6 +127,7 @@
           previewPath: null, // 预览路径
           frameId: null, // 组件id
           totalHash: null,
+          fsInitialized: false,
         },
         proto: {
           clickReload() {
@@ -221,6 +222,7 @@
                     e.data.frameId === this.frameId
                   ) {
                     this.previewPath = e.data.href + "/" + mainFileData.path;
+                    this.fsInitialized = true;
                     // 移除事件监听
                     $(window).off("message", f);
                     resolve();
