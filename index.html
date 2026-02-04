@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ofa playground</title>
     <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"></script>
+    <link
+      rel="stylesheet"
+      href="https://core.noneos.com/nos-tool/css/palette.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://core.noneos.com/nos-tool/css/theme.css"
+    />
   </head>
+  <nos-version></nos-version>
   <body>
     <script type="module">
       const load = lm(import.meta);
 
-      await load("./nos-tool/comps/nos-version.html");
+      await load("https://core.noneos.com/nos-tool/comps/nos-version.html");
     </script>
   </body>
 </html>
