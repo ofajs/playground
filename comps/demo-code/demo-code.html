@@ -66,16 +66,32 @@
       </div>
     </div>
     <div class="content">
-      <iframe attr:src="previewPath"></iframe>
+      <o-if :value="previewPath">
+        <iframe attr:src="previewPath"></iframe>
+      </o-if>
+      <o-else>
+        <iframe src="./writer.html" frameborder="0"></iframe>
+      </o-else>
     </div>
   </div>
 
   <script>
+    const systemInstalled = new Promise((resolve) => {
+      let f;
+      window.addEventListener(
+        "message",
+        (f = (e) => {
+          if (e.data.type === "system-installed") {
+            resolve();
+            // 移除事件监听
+            window.removeEventListener("message", f);
+          }
+        }),
+      );
+    });
+
     export default async ({ load }) => {
       const { getHash } = await load("/nos/util/hash/get-hash.js");
-      const { get, init } = await load("/nos/fs/main.js");
-
-      await init("nos-demo-case");
 
       return {
         tag: "o-demo-code",
@@ -119,33 +135,20 @@
           async initPreview() {
             const data = await this.getFileContent();
 
-            const cashDirHandle = await get(`nos-demo-case/${data.totalHash}`, {
-              create: "dir",
+            // 等待系统安装完成
+            await systemInstalled;
+
+            // 传递文件到对面的writer.html
+            this.shadow.$("iframe").ele.contentWindow.postMessage({
+              type: "get-file-content",
+              data,
             });
 
-            // 既不是页面也不是组件的文件，并且是html文件，作为预览文件
-            let previewPath = null;
-
-            // 写入文件
-            await Promise.all(
-              data.files.map(async (item) => {
-                const fileHandle = await cashDirHandle.get(item.path, {
-                  create: "file",
-                });
-
-                await fileHandle.write(item.content);
-
-                if (
-                  !item.isPage &&
-                  !item.isComponent &&
-                  item.path.endsWith(".html")
-                ) {
-                  previewPath = `/$${fileHandle.path}`;
-                }
-              }),
-            );
-
-            this.previewPath = previewPath;
+            $(window).one("message", (e) => {
+              if (e.data.type === "preview-url") {
+                this.previewPath = e.data.url;
+              }
+            });
           },
         },
         async attached() {
