@@ -18,9 +18,15 @@
     <l-m src="./demo-code.html"></l-m>
     <o-demo-code>
       <template path="demo.html">
-        <div>
+        <div id="target1">
           <p>Hello NoneOS Demo Code</p>
         </div>
+        <script>
+          let count = 0;
+          setInterval(() => {
+            $("#target1").text = "change text " + count++;
+          }, 500);
+        </script>
       </template>
     </o-demo-code>
   </body>
