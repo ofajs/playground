@@ -109,13 +109,21 @@
                 const isComponent = temp.attr("component") !== null;
                 const isPage = temp.attr("page") !== null;
 
+                let content = temp.html;
+
                 // 获取内容hash
-                const contentHash = await getHash(temp.html);
+                const contentHash = await getHash(content);
+
+                if (!isComponent && !isPage) {
+                  // 加上样式
+                  content += `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" />`;
+                  content += `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/theme.css" />`;
+                }
 
                 return {
                   contentHash,
                   path,
-                  content: temp.html,
+                  content,
                   isComponent,
                   isPage,
                 };
