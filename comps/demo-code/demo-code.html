@@ -2,10 +2,21 @@
   <l-m src="/nos/n-icon/n-icon.html"></l-m>
   <style>
     :host {
-      display: flex;
+      display: block;
+      container-type: inline-size; /* 启用基于内联尺寸（通常是宽度）的容器查询 */
       border-radius: 8px;
       border: 1px solid var(--md-sys-color-on-normal);
       overflow: hidden;
+    }
+
+    .outer {
+      display: flex;
+    }
+
+    @container (max-width: 640px) {
+      .outer {
+        flex-direction: column;
+      }
     }
 
     .container {
@@ -43,6 +54,7 @@
 
     .content {
       padding: 8px;
+      min-height: 260px;
     }
 
     iframe {
@@ -52,29 +64,31 @@
       border: none;
     }
   </style>
-  <div class="container">
-    <div class="top-bar"></div>
-    <div class="content">demo-code</div>
-  </div>
-  <div class="container">
-    <div class="top-bar">
-      <div class="top-btn">
-        <n-icon icon="mdi:reload"></n-icon>
-      </div>
-      <div class="top-btn">
-        <n-icon icon="majesticons:open"></n-icon>
-      </div>
+  <div class="outer">
+    <div class="container">
+      <div class="top-bar"></div>
+      <div class="content">demo-code</div>
     </div>
-    <div class="content">
-      <o-if :value="previewPath">
-        <iframe attr:src="previewPath"></iframe>
-      </o-if>
-      <o-else-if :value="frameId">
-        <iframe
-          attr:src="'./writer.html?frameId=' + frameId"
-          frameborder="0"
-        ></iframe>
-      </o-else-if>
+    <div class="container">
+      <div class="top-bar">
+        <div class="top-btn">
+          <n-icon icon="mdi:reload"></n-icon>
+        </div>
+        <div class="top-btn">
+          <n-icon icon="majesticons:open"></n-icon>
+        </div>
+      </div>
+      <div class="content">
+        <o-if :value="previewPath">
+          <iframe attr:src="previewPath"></iframe>
+        </o-if>
+        <o-else-if :value="frameId">
+          <iframe
+            attr:src="'./writer.html?frameId=' + frameId"
+            frameborder="0"
+          ></iframe>
+        </o-else-if>
+      </div>
     </div>
   </div>
 
