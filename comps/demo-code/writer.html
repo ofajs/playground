@@ -54,7 +54,14 @@
         await init("nos-demo-case");
 
         // 通知父层系统安装完成
-        window.parent && parent.postMessage({ type: "system-installed" }, "*");
+        window.parent &&
+          parent.postMessage(
+            {
+              type: "system-installed",
+              frameId: new URLSearchParams(location.search).get("frameId"),
+            },
+            "*",
+          );
       })();
 
       window.addEventListener("message", async (e) => {
@@ -95,6 +102,7 @@
               type: "preview-url",
               totalHash: data.totalHash,
               url: urlObj.href,
+              frameId: new URLSearchParams(location.search).get("frameId"),
             },
             "*",
           );

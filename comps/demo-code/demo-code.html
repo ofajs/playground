@@ -69,34 +69,24 @@
       <o-if :value="previewPath">
         <iframe attr:src="previewPath"></iframe>
       </o-if>
-      <o-else>
-        <iframe src="./writer.html" frameborder="0"></iframe>
-      </o-else>
+      <o-else-if :value="frameId">
+        <iframe
+          attr:src="'./writer.html?frameId=' + frameId"
+          frameborder="0"
+        ></iframe>
+      </o-else-if>
     </div>
   </div>
 
   <script>
-    const systemInstalled = new Promise((resolve) => {
-      let f;
-      window.addEventListener(
-        "message",
-        (f = (e) => {
-          if (e.data.type === "system-installed") {
-            resolve();
-            // 移除事件监听
-            window.removeEventListener("message", f);
-          }
-        }),
-      );
-    });
-
     export default async ({ load }) => {
       const { getHash } = await load("/nos/util/hash/get-hash.js");
 
       return {
         tag: "o-demo-code",
         data: {
-          previewPath: null,
+          previewPath: null, // 预览路径
+          frameId: null, // 组件id
         },
         proto: {
           // 获取代码并进行格式化等操作
@@ -144,20 +134,50 @@
             const data = await this.getFileContent();
 
             // 等待系统安装完成
-            await systemInstalled;
+            await this._systemInstalled;
 
             // 传递文件到对面的writer.html
             this.shadow.$("iframe").ele.contentWindow.postMessage({
               type: "get-file-content",
               data,
             });
-
-            $(window).one("message", (e) => {
-              if (e.data.type === "preview-url") {
-                this.previewPath = e.data.url;
-              }
-            });
+            {
+              let f;
+              $(window).on(
+                "message",
+                (f = (e) => {
+                  if (
+                    e.data.type === "preview-url" &&
+                    e.data.frameId === this.frameId
+                  ) {
+                    this.previewPath = e.data.url;
+                    // 移除事件监听
+                    $(window).off("message", f);
+                  }
+                }),
+              );
+            }
           },
+        },
+        ready() {
+          this.frameId = Math.random().toString(36).slice(2);
+
+          this._systemInstalled = new Promise((resolve) => {
+            let f;
+            window.addEventListener(
+              "message",
+              (f = (e) => {
+                if (e.data.type === "system-installed") {
+                  if (e.data.frameId !== this.frameId) {
+                    return;
+                  }
+                  resolve();
+                  // 移除事件监听
+                  window.removeEventListener("message", f);
+                }
+              }),
+            );
+          });
         },
         async attached() {
           this.initPreview();
