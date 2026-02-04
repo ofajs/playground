@@ -1,0 +1,24 @@
+{
+  "name": "ofa-playground",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/ofajs/playground#readme",
+  "bugs": {
+    "url": "https://github.com/ofajs/playground/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ofajs/playground.git"
+  },
+  "license": "MIT",
+  "author": "Yao",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "static": "http-server -p 4002 -c-1 --cors",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
