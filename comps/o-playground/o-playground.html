@@ -104,7 +104,7 @@
       <div class="content">
         <o-if :value="fsInitialized">
           <iframe
-            attr:src="'./code.html?totalHash=' + totalHash + '&mainFilePath=' + mainFilePath"
+            attr:src="'./code.html?totalHash=' + totalHash + '&codeFilePath=' + codeFilePath" // 查看代码的文件路径
             id="code-frame"
           ></iframe>
         </o-if>
@@ -145,7 +145,7 @@
       return {
         tag: "o-playground",
         data: {
-          mainFilePath: null,
+          codeFilePath: null, // 查看代码的文件路径
           previewPath: null, // 预览路径
           frameId: null, // 组件id
           totalHash: null,
@@ -173,16 +173,27 @@
             const files = await Promise.all(
               templates
                 .map(async (temp) => {
-                  const path = temp.attr("path");
+                  let path = temp.attr("path");
 
                   if (!path) {
-                    return;
+                    if (templates.length === 1) {
+                      // 如果只是一个案例，则进行额外补充文件，修正path
+                      path = "demo.html";
+                    } else {
+                      return;
+                    }
                   }
 
                   const isComponent = temp.attr("component") !== null;
                   const isPage = temp.attr("page") !== null;
 
                   let content = temp.html;
+
+                  if (isPage) {
+                    content = `<template page\>${content}</template>`;
+                  } else if (isComponent) {
+                    content = `<template component\>${content}</template>`;
+                  }
 
                   // 获取内容hash
                   const contentHash = await getHash(content);
@@ -224,6 +235,25 @@
           async initPreview() {
             const data = await this.getFileContent();
 
+            let mainFileData = data.files.find(
+              (item) => !item.isPage && !item.isComponent,
+            );
+
+            // 如果只有一个文件，而且不具备mainFile，则添加辅助文件
+            if (!mainFileData && data.files.length === 1) {
+              if (data.files[0].isPage) {
+                mainFileData = {
+                  path: "index.html",
+                  content: `${prefixContent}
+                  <o-page src="./${data.files[0].path}"></o-page>`,
+                  isComponent: false,
+                  isPage: false,
+                };
+
+                data.files.push(mainFileData);
+              }
+            }
+
             this.totalHash = data.totalHash;
 
             // 等待系统安装完成
@@ -235,11 +265,7 @@
               data,
             });
 
-            const mainFileData = data.files.find(
-              (item) => !item.isPage && !item.isComponent,
-            );
-
-            this.mainFilePath = mainFileData.path;
+            this.codeFilePath = mainFileData.path; // 查看代码的文件路径
 
             await new Promise((resolve) => {
               let f;
@@ -295,5 +321,9 @@
         },
       };
     };
+
+    const prefixContent = `<script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"><\/script>
+<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/theme.css" \/>
+<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" \/>\n`;
   </script>
 </template>

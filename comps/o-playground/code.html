@@ -40,7 +40,7 @@
 
         const params = new URLSearchParams(location.search);
         const totalHash = params.get("totalHash");
-        const mainFilePath = params.get("mainFilePath");
+        const codeFilePath = params.get("codeFilePath");
 
         const projectDirHandle = await get(`nos-demo-case/${totalHash}`);
 
@@ -48,7 +48,7 @@
           return;
         }
 
-        const targetHandle = await projectDirHandle.get(mainFilePath);
+        const targetHandle = await projectDirHandle.get(codeFilePath);
 
         let content = await targetHandle.text();
 
