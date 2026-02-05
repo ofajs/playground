@@ -174,12 +174,17 @@
     export default async ({ load, url }) => {
       // 等待系统安装完成
       const systemInstalled = new Promise((resolve) => {
-        window.addEventListener("message", (e) => {
-          if (e.data.type === "system-installed") {
-            writerFrame.remove();
-            resolve();
-          }
-        });
+        let f;
+        window.addEventListener(
+          "message",
+          (f = (e) => {
+            if (e.data.type === "system-installed") {
+              writerFrame.remove();
+              window.removeEventListener("message", f);
+              resolve();
+            }
+          }),
+        );
 
         const urlObj = new URL("./writer.html", url);
         const writerFrame = $(
@@ -197,15 +202,21 @@
         .then((res) => res.json())
         .catch(() => null);
 
+      let getHash;
       if (currentInstallNos && configData?.serviceWorkerVersion) {
         await load(location.origin + "/nos/n-icon/n-icon.html");
+        const { getHash: gg } = await load(
+          location.origin + "/nos/util/hash/get-hash.js",
+        );
+        getHash = gg;
       } else {
         await load("https://core.noneos.com/nos/n-icon/n-icon.html");
-      }
 
-      const { getHash } = await load(
-        "https://core.noneos.com/nos/util/hash/get-hash.js",
-      );
+        const { getHash: gg } = await load(
+          "https://core.noneos.com/nos/util/hash/get-hash.js",
+        );
+        getHash = gg;
+      }
 
       return {
         tag: "o-playground",
