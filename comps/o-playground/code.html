@@ -25,6 +25,10 @@
 
       await load("../monaco-editor/monaco-editor.html");
 
+      const prefixContent = `<script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"><\/script>
+<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/theme.css" \/>
+<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" \/>\n`;
+
       (async () => {
         const editor = $("monaco-editor");
 
@@ -40,16 +44,21 @@
 
         const targetHandle = await projectDirHandle.get(mainFilePath);
 
-        const content = await targetHandle.text();
+        let content = await targetHandle.text();
 
-        const reContent = jsBeautify.html(content, {
+        content = jsBeautify.html(content, {
           indent_size: 2,
           indent_char: " ",
           eol: "\n",
           preserve_newlines: false,
         });
 
-        editor.setValue(reContent);
+        if (content.includes(prefixContent)) {
+          // 将开头3件先去除
+          content = content.replace(prefixContent, "");
+        }
+
+        editor.setValue(content);
       })();
     </script>
   </body>
