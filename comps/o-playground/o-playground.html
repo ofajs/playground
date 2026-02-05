@@ -83,8 +83,19 @@
     <div class="container" style="height: var(--editor-height)">
       <div class="top-bar">
         <div style="flex: 1"></div>
-        <div class="top-btn">
+
+        <div style="display: flex; align-items: center">
           <n-icon icon="material-symbols:save-outline"></n-icon>
+          <div
+            style="
+              margin-left: 4px;
+              font-size: 14px;
+              color: var(--md-sys-color-normal, #838383);
+            "
+          >
+            <o-if :value="isMac"> cmd + s </o-if>
+            <o-else> ctrl + s </o-else>
+          </div>
         </div>
       </div>
       <div class="content">
@@ -134,13 +145,19 @@
           frameId: null, // 组件id
           totalHash: null,
           fsInitialized: false,
+          isMac: navigator.userAgent.indexOf("Mac") !== -1,
         },
         proto: {
           clickReload() {
+            if (this._clicked) {
+              return;
+            }
+            this._clicked = true;
             const url = this.previewPath;
             this.previewPath = "";
             setTimeout(() => {
               this.previewPath = url;
+              this._clicked = null;
             }, 100);
           },
           // 获取代码并进行格式化等操作
@@ -240,26 +257,32 @@
         },
         ready() {
           this.frameId = Math.random().toString(36).slice(2);
-
-          this._systemInstalled = new Promise((resolve) => {
-            let f;
-            window.addEventListener(
-              "message",
-              (f = (e) => {
-                if (e.data.type === "system-installed") {
-                  if (e.data.frameId !== this.frameId) {
-                    return;
-                  }
-                  resolve();
-                  // 移除事件监听
-                  window.removeEventListener("message", f);
-                }
-              }),
-            );
-          });
         },
         async attached() {
+          let _initResove;
+          this._systemInstalled = new Promise((resolve) => {
+            _initResove = resolve;
+          });
+
+          window.addEventListener(
+            "message",
+            (this._init_f = (e) => {
+              if (e.data.type === "system-installed") {
+                if (e.data.frameId !== this.frameId) {
+                  return;
+                }
+
+                _initResove();
+              } else if (e.data.type === "save-file") {
+                this.clickReload();
+              }
+            }),
+          );
+
           this.initPreview();
+        },
+        detached() {
+          this._init_f && window.removeEventListener("message", this._init_f);
         },
       };
     };

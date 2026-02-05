@@ -76,6 +76,9 @@
           }
 
           await targetHandle.write(newValue);
+
+          window.parent &&
+            window.parent.postMessage({ type: "save-file" }, "*");
         });
       }
     </script>
