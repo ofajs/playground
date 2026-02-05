@@ -122,8 +122,12 @@
               break;
             case "setTheme":
               const theme = event.data.theme;
-              if (theme === "light" || theme === "dark") {
-                monaco.editor.setTheme(theme);
+              if (theme === "light") {
+                monaco.editor.setTheme("light");
+                document.documentElement.setAttribute("data-theme", "light");
+              } else if (theme === "dark") {
+                monaco.editor.setTheme("vs-dark");
+                document.documentElement.setAttribute("data-theme", "dark");
               }
               break;
             case "setPlugins":
