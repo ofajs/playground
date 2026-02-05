@@ -174,12 +174,17 @@
     export default async ({ load, url }) => {
       // 等待系统安装完成
       const systemInstalled = new Promise((resolve) => {
-        window.addEventListener("message", (e) => {
-          if (e.data.type === "system-installed") {
-            writerFrame.remove();
-            resolve();
-          }
-        });
+        let f;
+        window.addEventListener(
+          "message",
+          (f = (e) => {
+            if (e.data.type === "system-installed") {
+              writerFrame.remove();
+              window.removeEventListener("message", f);
+              resolve();
+            }
+          }),
+        );
 
         const urlObj = new URL("./writer.html", url);
         const writerFrame = $(
@@ -197,15 +202,20 @@
         .then((res) => res.json())
         .catch(() => null);
 
-      if (currentInstallNos && configData?.serviceWorkerVersion) {
-        await load(location.origin + "/nos/n-icon/n-icon.html");
-      } else {
-        await load("https://core.noneos.com/nos/n-icon/n-icon.html");
-      }
+      // 统一资源前缀，避免重复拼接
+      const localPrefix = location.origin;
+      const remotePrefix = "https://core.noneos.com";
 
-      const { getHash } = await load(
-        "https://core.noneos.com/nos/util/hash/get-hash.js",
-      );
+      const prefix =
+        currentInstallNos && configData?.serviceWorkerVersion
+          ? localPrefix
+          : remotePrefix;
+
+      // 并行加载图标组件与哈希工具，减少等待时间
+      const [, { getHash }] = await Promise.all([
+        load(`${prefix}/nos/n-icon/n-icon.html`),
+        load(`${prefix}/nos/util/hash/get-hash.js`),
+      ]);
 
       return {
         tag: "o-playground",
@@ -337,10 +347,13 @@
             this.totalHash = data.totalHash;
 
             // 传递文件到对面的writer.html
-            this.shadow.$("#writer-frame").ele.contentWindow.postMessage({
-              type: "get-file-content",
-              data,
-            });
+            this.shadow.$("#writer-frame").ele.contentWindow.postMessage(
+              {
+                type: "get-file-content",
+                data,
+              },
+              "*",
+            );
 
             const activeFileData = data.files.find((item) => item.active);
 
