@@ -103,7 +103,7 @@
       align-items: center;
       justify-content: center;
       background-color: var(--md-sys-color-surface);
-      z-index: 10;
+      z-index: 3;
     }
 
     .hide {
@@ -183,11 +183,11 @@
         });
 
         const urlObj = new URL("./writer.html", url);
-        const writerFrame = $(`<iframe src="${urlObj.href}"></iframe>`);
+        const writerFrame = $(
+          `<iframe src="${urlObj.href}" style="display: none;"></iframe>`,
+        );
         $("body").push(writerFrame);
       });
-
-      await systemInstalled;
 
       const { getHash } = await load(
         "https://core.noneos.com/nos/util/hash/get-hash.js",
@@ -352,7 +352,8 @@
             });
           },
         },
-        ready() {
+        async ready() {
+          await systemInstalled;
           this.frameId = Math.random().toString(36).slice(2);
         },
         async attached() {
