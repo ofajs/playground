@@ -5,7 +5,7 @@
       display: block;
       container-type: inline-size; /* 启用基于内联尺寸（通常是宽度）的容器查询 */
       border-radius: 8px;
-      border: 1px solid var(--md-sys-color-on-normal);
+      border: 1px solid var(--md-sys-color-primary);
       overflow: hidden;
     }
 
@@ -13,12 +13,6 @@
       width: 100%;
       height: 100%;
       display: flex;
-    }
-
-    @container (max-width: 640px) {
-      .outer {
-        display: block;
-      }
     }
 
     .container {
@@ -29,8 +23,18 @@
     }
 
     .container {
-      border-left: 1px solid var(--md-sys-color-normal-container);
+      border-left: 1px solid var(--md-sys-color-primary);
     }
+
+    @container (max-width: 640px) {
+      .outer {
+        display: block;
+      }
+      .container {
+        border-left: none;
+      }
+    }
+
     .container:first-child {
       border-left: none;
     }
@@ -40,7 +44,8 @@
       align-items: center;
       height: 32px;
       padding: 0 8px;
-      background-color: var(--md-sys-color-on-normal);
+      color: var(--md-sys-color-on-primary);
+      background-color: var(--md-sys-color-primary);
     }
 
     .top-btn {
@@ -53,10 +58,11 @@
       font-size: 16px;
       border-radius: 20px;
       cursor: pointer;
-      color: var(--md-sys-color-on-primary-container);
+      color: inherit;
     }
     .top-btn:hover {
-      background-color: var(--md-sys-color-normal-container);
+      color: var(--md-sys-color-primary-container);
+      background-color: var(--md-sys-color-on-primary-container);
     }
 
     .content {
@@ -109,7 +115,7 @@
       display: none;
     }
   </style>
-  <div class="mask" class:hide="previewPath">
+  <div class="mask" class:hide="fsInitialized">
     <div class="spinner"></div>
   </div>
   <div class="outer">
@@ -126,7 +132,7 @@
             style="
               margin-left: 4px;
               font-size: 14px;
-              color: var(--md-sys-color-normal, #838383);
+              color: var(--md-sys-color-on-primary, #838383);
             "
           >
             <o-if :value="isMac"> cmd + s </o-if>
