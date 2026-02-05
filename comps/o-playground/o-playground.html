@@ -176,6 +176,8 @@
     </div>
   </div>
 
+  <o-consumer name="pui" watch:theme="theme"></o-consumer>
+
   <script>
     export default async ({ load, url }) => {
       // 等待系统安装完成
@@ -226,6 +228,7 @@
       return {
         tag: "o-playground",
         data: {
+          theme: "",
           codeFilePath: null, // 查看代码的文件路径
           previewPath: null, // 预览路径
           frameId: null, // 组件id
@@ -233,6 +236,19 @@
           fsInitialized: false,
           fileChanged: false,
           isMac: navigator.userAgent.indexOf("Mac") !== -1,
+        },
+        watch: {
+          theme(theme) {
+            this.shadow.$("#code-frame") &&
+              this.shadow.$("#code-frame").ele.contentWindow.postMessage(
+                {
+                  id: this._frameId,
+                  type: "setTheme",
+                  theme,
+                },
+                "*",
+              );
+          },
         },
         proto: {
           onFrameLoad(e) {
