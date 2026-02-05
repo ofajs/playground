@@ -89,6 +89,7 @@
                     event.data.id === this._frameId &&
                     event.data.type === "getValue"
                   ) {
+                    event.stopImmediatePropagation();
                     // 移除事件监听
                     window.removeEventListener("message", f);
                     resolve(event.data.value);
@@ -119,6 +120,7 @@
           // 监听初始化完成消息
           window.addEventListener("message", (event) => {
             if (event.data.id === this._frameId && event.data.initialized) {
+              event.stopImmediatePropagation();
               // 初始化完成
               initResolve();
               this.emit("initialized");
@@ -129,6 +131,7 @@
               event.data.id === this._frameId &&
               event.data.type === "contentChange"
             ) {
+              event.stopImmediatePropagation();
               // 内容改变
               this.emit("change", {
                 bubbles: false,
@@ -137,6 +140,7 @@
             }
 
             if (event.data.id === this._frameId && event.data.type === "save") {
+              event.stopImmediatePropagation();
               // 保存触发
               this.emit("save", {
                 bubbles: false,

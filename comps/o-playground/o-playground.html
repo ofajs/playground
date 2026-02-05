@@ -44,6 +44,7 @@
       display: flex;
       align-items: center;
       height: 32px;
+      padding: 0 8px;
       background-color: var(--md-sys-color-on-normal);
     }
 
@@ -51,7 +52,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-left: 4px;
+      margin: 0 4px;
       height: 28px;
       width: 28px;
       font-size: 16px;
@@ -80,7 +81,12 @@
   </style>
   <div class="outer">
     <div class="container" style="height: var(--editor-height)">
-      <div class="top-bar"></div>
+      <div class="top-bar">
+        <div style="flex: 1"></div>
+        <div class="top-btn">
+          <n-icon icon="material-symbols:save-outline"></n-icon>
+        </div>
+      </div>
       <div class="content">
         <o-if :value="fsInitialized">
           <iframe
