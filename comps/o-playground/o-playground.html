@@ -1,5 +1,4 @@
 <template component>
-  <!-- <l-m src="https://core.noneos.com/nos/n-icon/n-icon.html"></l-m> -->
   <style>
     :host {
       position: relative;
@@ -194,8 +193,12 @@
         .then((res) => res.json())
         .catch(() => null);
 
-      if (currentInstallNos) {
-        await load("/nos/n-icon/n-icon.html");
+      const configData = await fetch("/__config")
+        .then((res) => res.json())
+        .catch(() => null);
+
+      if (currentInstallNos && configData?.serviceWorkerVersion) {
+        await load(location.origin + "/nos/n-icon/n-icon.html");
       } else {
         await load("https://core.noneos.com/nos/n-icon/n-icon.html");
       }
