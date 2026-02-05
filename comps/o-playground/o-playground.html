@@ -125,11 +125,12 @@
         <o-if :value="previewPath">
           <iframe attr:src="previewPath"></iframe>
         </o-if>
-        <o-else-if :value="frameId">
+        <o-else-if :value="!!frameId">
           <iframe
             id="writer-frame"
             attr:src="'./writer.html?frameId=' + frameId"
             src="./code.html"
+            on:load="onFrameLoad"
           ></iframe>
         </o-else-if>
       </div>
@@ -137,7 +138,23 @@
   </div>
 
   <script>
-    export default async ({ load }) => {
+    export default async ({ load, url }) => {
+      // 等待系统安装完成
+      const systemInstalled = new Promise((resolve) => {
+        window.addEventListener("message", (e) => {
+          if (e.data.type === "system-installed") {
+            writerFrame.remove();
+            resolve();
+          }
+        });
+
+        const urlObj = new URL("./writer.html", url);
+        const writerFrame = $(`<iframe src="${urlObj.href}"></iframe>`);
+        $("body").push(writerFrame);
+      });
+
+      await systemInstalled;
+
       const { getHash } = await load(
         "https://core.noneos.com/nos/util/hash/get-hash.js",
       );
@@ -154,6 +171,9 @@
           isMac: navigator.userAgent.indexOf("Mac") !== -1,
         },
         proto: {
+          onFrameLoad(e) {
+            this.initPreview();
+          },
           clickReload() {
             if (this._clicked) {
               return;
@@ -262,9 +282,6 @@
 
             this.totalHash = data.totalHash;
 
-            // 等待系统安装完成
-            await this._systemInstalled;
-
             // 传递文件到对面的writer.html
             this.shadow.$("#writer-frame").ele.contentWindow.postMessage({
               type: "get-file-content",
@@ -299,21 +316,10 @@
           this.frameId = Math.random().toString(36).slice(2);
         },
         async attached() {
-          let _initResove;
-          this._systemInstalled = new Promise((resolve) => {
-            _initResove = resolve;
-          });
-
           window.addEventListener(
             "message",
             (this._init_f = (e) => {
-              if (e.data.type === "system-installed") {
-                if (e.data.frameId !== this.frameId) {
-                  return;
-                }
-
-                _initResove();
-              } else if (e.data.type === "save-file") {
+              if (e.data.type === "save-file") {
                 if (e.data.totalHash !== this.totalHash) {
                   return;
                 }
@@ -329,8 +335,6 @@
               }
             }),
           );
-
-          this.initPreview();
         },
         detached() {
           this._init_f && window.removeEventListener("message", this._init_f);
