@@ -84,7 +84,10 @@
       <div class="top-bar">
         <div style="flex: 1"></div>
 
-        <div style="display: flex; align-items: center">
+        <div
+          style="display: flex; align-items: center"
+          :style.opacity="fileChanged ? 1 : 0.5"
+        >
           <n-icon icon="material-symbols:save-outline"></n-icon>
           <div
             style="
@@ -145,6 +148,7 @@
           frameId: null, // 组件id
           totalHash: null,
           fsInitialized: false,
+          fileChanged: false,
           isMac: navigator.userAgent.indexOf("Mac") !== -1,
         },
         proto: {
@@ -275,6 +279,9 @@
                 _initResove();
               } else if (e.data.type === "save-file") {
                 this.clickReload();
+                this.fileChanged = false;
+              } else if (e.data.type === "change-file") {
+                this.fileChanged = e.data.isChanged;
               }
             }),
           );
