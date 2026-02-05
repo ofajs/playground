@@ -17,6 +17,8 @@
   <body>
     <monaco-editor></monaco-editor>
     <script type="module">
+      import jsBeautify from "/npm/js-beautify@1.15.1/+esm";
+
       const load = lm(import.meta);
 
       const { get } = await load("/nos/fs/main.js");
@@ -40,7 +42,14 @@
 
         const content = await targetHandle.text();
 
-        editor.setValue(content);
+        const reContent = jsBeautify.html(content, {
+          indent_size: 2,
+          indent_char: " ",
+          eol: "\n",
+          preserve_newlines: false,
+        });
+
+        editor.setValue(reContent);
       })();
     </script>
   </body>
