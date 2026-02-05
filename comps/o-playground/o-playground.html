@@ -104,7 +104,7 @@
       <div class="content">
         <o-if :value="fsInitialized">
           <iframe
-            attr:src="'./code.html?totalHash=' + totalHash + '&codeFilePath=' + codeFilePath" // 查看代码的文件路径
+            attr:src="'./code.html?totalHash=' + totalHash + '&codeFilePath=' + codeFilePath"
             id="code-frame"
           ></iframe>
         </o-if>
@@ -235,22 +235,28 @@
           async initPreview() {
             const data = await this.getFileContent();
 
-            let mainFileData = data.files.find(
+            let previewFileData = data.files.find(
               (item) => !item.isPage && !item.isComponent,
             );
 
-            // 如果只有一个文件，而且不具备mainFile，则添加辅助文件
-            if (!mainFileData && data.files.length === 1) {
-              if (data.files[0].isPage) {
-                mainFileData = {
-                  path: "index.html",
-                  content: `${prefixContent}
-                  <o-page src="./${data.files[0].path}"></o-page>`,
-                  isComponent: false,
-                  isPage: false,
-                };
+            if (data.files.length === 1) {
+              data.files[0].active = true;
 
-                data.files.push(mainFileData);
+              // 如果只有一个文件，而且不具备mainFile，则添加辅助文件
+              if (!previewFileData) {
+                if (data.files[0].isPage) {
+                  previewFileData = {
+                    path: "index.html",
+                    content: `${prefixContent}\n<o-page src="./${data.files[0].path}"></o-page>`,
+                    isComponent: false,
+                    isPage: false,
+                    preview: true,
+                  };
+
+                  data.files.push(previewFileData);
+                }
+              } else {
+                previewFileData.preview = true; // 预览文件
               }
             }
 
@@ -265,7 +271,9 @@
               data,
             });
 
-            this.codeFilePath = mainFileData.path; // 查看代码的文件路径
+            const activeFileData = data.files.find((item) => item.active);
+
+            this.codeFilePath = activeFileData.path; // 查看代码的文件路径
 
             await new Promise((resolve) => {
               let f;
@@ -276,7 +284,7 @@
                     e.data.type === "preview-url" &&
                     e.data.frameId === this.frameId
                   ) {
-                    this.previewPath = e.data.href + "/" + mainFileData.path;
+                    this.previewPath = e.data.href + "/" + previewFileData.path;
                     this.fsInitialized = true;
                     // 移除事件监听
                     $(window).off("message", f);
