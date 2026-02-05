@@ -122,7 +122,16 @@
               break;
             case "setTheme":
               const theme = event.data.theme;
-              if (theme === "light") {
+              if (theme === "auto") {
+                const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                if (systemTheme === "light") {
+                  monaco.editor.setTheme("light");
+                  document.documentElement.setAttribute("data-theme", "light");
+                } else {
+                  monaco.editor.setTheme("vs-dark");
+                  document.documentElement.setAttribute("data-theme", "dark");
+                }
+              } else if (theme === "light") {
                 monaco.editor.setTheme("light");
                 document.documentElement.setAttribute("data-theme", "light");
               } else if (theme === "dark") {
