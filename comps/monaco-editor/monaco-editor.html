@@ -27,19 +27,6 @@
           _frameId: null,
           _initialized: null,
         },
-        proto: {
-          _postMessage(type, data = {}) {
-            if (this._editorFrame && this._editorFrame.contentWindow) {
-              this._editorFrame.contentWindow.postMessage(
-                {
-                  type,
-                  ...data,
-                },
-                frameSrc
-              );
-            }
-          },
-        },
         attrs: {
           plugins: null,
         },
@@ -60,9 +47,12 @@
                   type,
                   ...data,
                 },
-                frameSrc
+                frameSrc,
               );
             }
+          },
+          setTheme(theme) {
+            this._postMessage("setTheme", { theme });
           },
           async setLanguage(lang) {
             await this._initialized;
@@ -94,7 +84,7 @@
                     window.removeEventListener("message", f);
                     resolve(event.data.value);
                   }
-                })
+                }),
               );
             });
           },
@@ -116,6 +106,11 @@
           this._initialized = new Promise((resolve) => {
             initResolve = resolve;
           });
+
+          // setTimeout(() => {
+          //   // 测试白天模式
+          //   this._postMessage("setTheme", { theme: "light" });
+          // }, 1000);
 
           // 监听初始化完成消息
           window.addEventListener("message", (event) => {
@@ -150,7 +145,7 @@
           });
 
           this.shadow.push(
-            `<iframe src="${frameSrc}?frameId=${this._frameId}" frameborder="0"></iframe>`
+            `<iframe src="${frameSrc}?frameId=${this._frameId}" frameborder="0"></iframe>`,
           );
 
           this._editorFrame = this.shadow.$("iframe").ele;
