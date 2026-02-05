@@ -1,5 +1,5 @@
 <template component>
-  <l-m src="/nos/n-icon/n-icon.html"></l-m>
+  <l-m src="https://core.noneos.com/nos/n-icon/n-icon.html"></l-m>
   <style>
     :host {
       position: relative;
@@ -138,7 +138,9 @@
 
   <script>
     export default async ({ load }) => {
-      const { getHash } = await load("/nos/util/hash/get-hash.js");
+      const { getHash } = await load(
+        "https://core.noneos.com/nos/util/hash/get-hash.js",
+      );
 
       return {
         tag: "o-playground",
