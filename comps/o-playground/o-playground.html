@@ -1,5 +1,5 @@
 <template component>
-  <l-m src="https://core.noneos.com/nos/n-icon/n-icon.html"></l-m>
+  <!-- <l-m src="https://core.noneos.com/nos/n-icon/n-icon.html"></l-m> -->
   <style>
     :host {
       position: relative;
@@ -188,6 +188,17 @@
         );
         $("body").push(writerFrame);
       });
+
+      // 判断当前系统有没有安装nos
+      const currentInstallNos = await fetch("/nos/nos.json")
+        .then((res) => res.json())
+        .catch(() => null);
+
+      if (currentInstallNos) {
+        await load("/nos/n-icon/n-icon.html");
+      } else {
+        await load("https://core.noneos.com/nos/n-icon/n-icon.html");
+      }
 
       const { getHash } = await load(
         "https://core.noneos.com/nos/util/hash/get-hash.js",
