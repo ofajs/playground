@@ -103,17 +103,17 @@
       align-items: center;
       justify-content: center;
       background-color: var(--md-sys-color-surface);
-      z-index: 2;
+      z-index: 10;
     }
 
     .hide {
       display: none;
     }
   </style>
+  <div class="mask" class:hide="previewPath">
+    <div class="spinner"></div>
+  </div>
   <div class="outer">
-    <div class="mask" class:hide="previewPath">
-      <div class="spinner"></div>
-    </div>
     <div class="container" style="height: var(--editor-height)">
       <div class="top-bar">
         <div style="flex: 1"></div>
