@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>monaco-editor use case</title>
+    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"></script>
+    <link
+      rel="stylesheet"
+      href="https://core.noneos.com/nos-tool/css/palette.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://core.noneos.com/nos-tool/css/theme.css"
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <monaco-editor plugins="prettier" style="height: 100%"></monaco-editor>
+
+    <script type="module">
+      const load = lm(import.meta);
+
+      await load("./monaco-editor.html");
+
+      const editor = $("monaco-editor");
+      editor.setValue("<div>Hello World</div>");
+    </script>
+  </body>
+</html>

@@ -1,0 +1,390 @@
+<template component>
+  <l-m src="https://core.noneos.com/nos/n-icon/n-icon.html"></l-m>
+  <style>
+    :host {
+      position: relative;
+      display: block;
+      container-type: inline-size; /* 启用基于内联尺寸（通常是宽度）的容器查询 */
+      border-radius: 8px;
+      border: 1px solid var(--md-sys-color-on-normal);
+      overflow: hidden;
+    }
+
+    .outer {
+      width: 100%;
+      height: 100%;
+      display: flex;
+    }
+
+    @container (max-width: 640px) {
+      .outer {
+        display: block;
+      }
+    }
+
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+    }
+
+    .container {
+      border-left: 1px solid var(--md-sys-color-normal-container);
+    }
+    .container:first-child {
+      border-left: none;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      height: 32px;
+      padding: 0 8px;
+      background-color: var(--md-sys-color-on-normal);
+    }
+
+    .top-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 4px;
+      height: 28px;
+      width: 28px;
+      font-size: 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      color: var(--md-sys-color-on-primary-container);
+    }
+    .top-btn:hover {
+      background-color: var(--md-sys-color-normal-container);
+    }
+
+    .content {
+      position: relative;
+      flex: 1;
+    }
+
+    iframe {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--md-sys-color-surface, #f3f3f3);
+      border-top: 2px solid var(--md-sys-color-primary, #3498db);
+      border-radius: 50%;
+      animation: spin 0.5s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .mask {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--md-sys-color-surface);
+      z-index: 3;
+    }
+
+    .hide {
+      display: none;
+    }
+  </style>
+  <div class="mask" class:hide="previewPath">
+    <div class="spinner"></div>
+  </div>
+  <div class="outer">
+    <div class="container" style="height: var(--editor-height)">
+      <div class="top-bar">
+        <div style="flex: 1"></div>
+
+        <div
+          style="display: flex; align-items: center"
+          :style.opacity="fileChanged ? 1 : 0.5"
+        >
+          <n-icon icon="material-symbols:save-outline"></n-icon>
+          <div
+            style="
+              margin-left: 4px;
+              font-size: 14px;
+              color: var(--md-sys-color-normal, #838383);
+            "
+          >
+            <o-if :value="isMac"> cmd + s </o-if>
+            <o-else> ctrl + s </o-else>
+          </div>
+        </div>
+      </div>
+      <div class="content">
+        <o-if :value="fsInitialized">
+          <iframe
+            attr:src="'./code.html?totalHash=' + totalHash + '&codeFilePath=' + codeFilePath"
+            id="code-frame"
+          ></iframe>
+        </o-if>
+      </div>
+    </div>
+    <div class="container" style="height: var(--preview-height)">
+      <div class="top-bar">
+        <div class="top-btn" on:click="clickReload">
+          <n-icon icon="mdi:reload"></n-icon>
+        </div>
+        <o-if :value="previewPath">
+          <a class="top-btn" attr:href="previewPath" target="_blank">
+            <n-icon icon="majesticons:open"></n-icon>
+          </a>
+        </o-if>
+      </div>
+      <div class="content">
+        <o-if :value="previewPath">
+          <iframe attr:src="previewPath"></iframe>
+        </o-if>
+        <o-else-if :value="!!frameId">
+          <iframe
+            id="writer-frame"
+            attr:src="'./writer.html?frameId=' + frameId"
+            src="./code.html"
+            on:load="onFrameLoad"
+          ></iframe>
+        </o-else-if>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    export default async ({ load, url }) => {
+      // 等待系统安装完成
+      const systemInstalled = new Promise((resolve) => {
+        window.addEventListener("message", (e) => {
+          if (e.data.type === "system-installed") {
+            writerFrame.remove();
+            resolve();
+          }
+        });
+
+        const urlObj = new URL("./writer.html", url);
+        const writerFrame = $(
+          `<iframe src="${urlObj.href}" style="display: none;"></iframe>`,
+        );
+        $("body").push(writerFrame);
+      });
+
+      const { getHash } = await load(
+        "https://core.noneos.com/nos/util/hash/get-hash.js",
+      );
+
+      return {
+        tag: "o-playground",
+        data: {
+          codeFilePath: null, // 查看代码的文件路径
+          previewPath: null, // 预览路径
+          frameId: null, // 组件id
+          totalHash: null,
+          fsInitialized: false,
+          fileChanged: false,
+          isMac: navigator.userAgent.indexOf("Mac") !== -1,
+        },
+        proto: {
+          onFrameLoad(e) {
+            if (this._frameLoaded) {
+              return;
+            }
+
+            this._frameLoaded = 1;
+
+            this.initPreview();
+          },
+          clickReload() {
+            if (this._clicked) {
+              return;
+            }
+            this._clicked = true;
+            const url = this.previewPath;
+            this.previewPath = "";
+            setTimeout(() => {
+              this.previewPath = url;
+              this._clicked = null;
+            }, 100);
+          },
+          // 获取代码并进行格式化等操作
+          async getFileContent() {
+            const templates = this.all("template");
+
+            const files = await Promise.all(
+              templates
+                .map(async (temp) => {
+                  let path = temp.attr("path");
+
+                  if (!path) {
+                    if (templates.length === 1) {
+                      // 如果只是一个案例，则进行额外补充文件，修正path
+                      path = "demo.html";
+                    } else {
+                      return;
+                    }
+                  }
+
+                  const isComponent = temp.attr("component") !== null;
+                  const isPage = temp.attr("page") !== null;
+
+                  let content = temp.html;
+
+                  if (isPage) {
+                    content = `<template page\>${content}</template>`;
+                  } else if (isComponent) {
+                    content = `<template component\>${content}</template>`;
+                  }
+
+                  // 获取内容hash
+                  const contentHash = await getHash(content);
+
+                  if (!isComponent && !isPage) {
+                    // 加上样式
+                    content =
+                      `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" />` +
+                      content;
+                    content =
+                      `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/theme.css" />` +
+                      content;
+                    content =
+                      `<script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"><\/script>` +
+                      content;
+                  }
+
+                  return {
+                    contentHash,
+                    path,
+                    content,
+                    isComponent,
+                    isPage,
+                  };
+                })
+                .filter((item) => !!item),
+            );
+
+            // 计算总hash
+            const totalHash = await getHash(
+              files.map((item) => item.contentHash).join(""),
+            );
+
+            return {
+              files,
+              totalHash,
+            };
+          },
+          async initPreview() {
+            const data = await this.getFileContent();
+
+            let previewFileData = data.files.find(
+              (item) => !item.isPage && !item.isComponent,
+            );
+
+            if (data.files.length === 1) {
+              data.files[0].active = true;
+
+              // 如果只有一个文件，而且不具备mainFile，则添加辅助文件
+              if (!previewFileData) {
+                if (data.files[0].isPage) {
+                  previewFileData = {
+                    path: "index.html",
+                    content: `${prefixContent}\n<o-page src="./${data.files[0].path}"></o-page>`,
+                    isComponent: false,
+                    isPage: false,
+                    preview: true,
+                  };
+
+                  data.files.push(previewFileData);
+                }
+              } else {
+                previewFileData.preview = true; // 预览文件
+              }
+            }
+
+            this.totalHash = data.totalHash;
+
+            // 传递文件到对面的writer.html
+            this.shadow.$("#writer-frame").ele.contentWindow.postMessage({
+              type: "get-file-content",
+              data,
+            });
+
+            const activeFileData = data.files.find((item) => item.active);
+
+            this.codeFilePath = activeFileData.path; // 查看代码的文件路径
+
+            await new Promise((resolve) => {
+              let f;
+              $(window).on(
+                "message",
+                (f = (e) => {
+                  if (
+                    e.data.type === "preview-url" &&
+                    e.data.frameId === this.frameId
+                  ) {
+                    this.previewPath = e.data.href + "/" + previewFileData.path;
+                    this.fsInitialized = true;
+                    // 移除事件监听
+                    $(window).off("message", f);
+                    resolve();
+                  }
+                }),
+              );
+            });
+          },
+        },
+        async ready() {
+          await systemInstalled;
+          this.frameId = Math.random().toString(36).slice(2);
+        },
+        async attached() {
+          window.addEventListener(
+            "message",
+            (this._init_f = (e) => {
+              if (e.data.type === "save-file") {
+                if (e.data.totalHash !== this.totalHash) {
+                  return;
+                }
+
+                this.clickReload();
+                this.fileChanged = false;
+              } else if (e.data.type === "change-file") {
+                if (e.data.totalHash !== this.totalHash) {
+                  return;
+                }
+
+                this.fileChanged = e.data.isChanged;
+              }
+            }),
+          );
+        },
+        detached() {
+          this._init_f && window.removeEventListener("message", this._init_f);
+        },
+      };
+    };
+
+    const prefixContent = `<script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"><\/script>
+<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/theme.css" \/>
+<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" \/>\n`;
+  </script>
+</template>

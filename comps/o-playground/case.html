@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>demo code use case</title>
+    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"></script>
+    <link
+      rel="stylesheet"
+      href="https://core.noneos.com/nos-tool/css/palette.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://core.noneos.com/nos-tool/css/theme.css"
+    />
+  </head>
+  <body>
+    <l-m src="./o-playground.html"></l-m>
+    <o-playground style="--editor-height: 300px">
+      <template>
+        <div id="target1">
+          <p>Hello NoneOS Demo Code</p>
+        </div>
+        <script>
+          let count = 0;
+          setInterval(() => {
+            $("#target1").text = "change text " + count++;
+          }, 500);
+        </script>
+      </template>
+    </o-playground>
+    
+    <br>
+
+    <o-playground style="--editor-height: 400px">
+      <template page>
+        <div>{{val}}</div>
+        <script>
+          export default () => {
+            return {
+              data: {
+                val: "Hello world",
+              },
+            };
+          };
+        </script>
+      </template>
+    </o-playground>
+  </body>
+</html>

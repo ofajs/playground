@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Case Writer</title>
+    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"></script>
+    <link
+      rel="stylesheet"
+      href="https://core.noneos.com/nos-tool/css/palette.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://core.noneos.com/nos-tool/css/theme.css"
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <l-m src="https://core.noneos.com/nos-tool/comps/nos-version.html"></l-m>
+    <nos-version auto-install></nos-version>
+    <script type="module">
+      const load = lm(import.meta);
+
+      (async () => {
+        const vEl = $("nos-version");
+
+        // 等待系统安装完成
+        await new Promise((resolve) => {
+          if (vEl.installed) {
+            resolve();
+            return;
+          }
+          vEl.one("installed", () => {
+            resolve();
+          });
+        });
+
+        const { init, get } = await load("/nos/fs/main.js");
+
+        // 初始化case的目录
+        await init("nos-demo-case");
+
+        // 通知父层系统安装完成
+        window.parent &&
+          parent.postMessage(
+            {
+              type: "system-installed",
+              frameId: new URLSearchParams(location.search).get("frameId"),
+            },
+            "*",
+          );
+      })();
+
+      window.addEventListener("message", async (e) => {
+        if (e.data.type === "get-file-content") {
+          const { data } = e.data;
+
+          const { init, get } = await load("/nos/fs/main.js");
+
+          // 初始化case的目录
+          await init("nos-demo-case");
+
+          const cashDirHandle = await get(`nos-demo-case/${data.totalHash}`, {
+            create: "dir",
+          });
+
+          // 写入文件
+          await Promise.all(
+            data.files.map(async (item) => {
+              const fileHandle = await cashDirHandle.get(item.path, {
+                create: "file",
+              });
+
+              await fileHandle.write(item.content);
+            }),
+          );
+
+          // 返回预览地址
+          const urlObj = new URL("/$" + cashDirHandle.path, import.meta.url);
+
+          window.parent.postMessage(
+            {
+              type: "preview-url",
+              totalHash: data.totalHash,
+              href: urlObj.href,
+              frameId: new URLSearchParams(location.search).get("frameId"),
+            },
+            "*",
+          );
+        }
+      });
+    </script>
+  </body>
+</html>

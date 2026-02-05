@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Code View</title>
+    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"></script>
+    <style>
+      html,
+      body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <monaco-editor></monaco-editor>
+    <script type="module">
+      import jsBeautify from "/npm/js-beautify@1.15.1/+esm";
+
+      const load = lm(import.meta);
+
+      const { get } = await load("/nos/fs/main.js");
+
+      await load("../monaco-editor/monaco-editor.html");
+
+      const prefixContent = `<script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"><\/script>
+<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/theme.css" \/>
+<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" \/>\n`;
+
+      window.addEventListener("message", (e) => {
+        console.log(e.data);
+      });
+
+      initEditor();
+
+      async function initEditor() {
+        const editor = $("monaco-editor");
+
+        const params = new URLSearchParams(location.search);
+        const totalHash = params.get("totalHash");
+        const codeFilePath = params.get("codeFilePath");
+
+        const projectDirHandle = await get(`nos-demo-case/${totalHash}`);
+
+        if (!projectDirHandle) {
+          return;
+        }
+
+        const targetHandle = await projectDirHandle.get(codeFilePath);
+
+        let content = await targetHandle.text();
+
+        content = jsBeautify.html(content, {
+          indent_size: 2,
+          indent_char: " ",
+          eol: "\n",
+          preserve_newlines: false,
+        });
+
+        const hasPrefix = content.includes(prefixContent);
+
+        if (hasPrefix) {
+          // 将开头3件先去除
+          content = content.replace(prefixContent, "");
+        }
+
+        editor.setValue(content);
+
+        editor.on("change", async (e) => {
+          let newValue = await editor.getValue();
+
+          window.parent &&
+            window.parent.postMessage(
+              {
+                type: "change-file",
+                isChanged: newValue !== content,
+                totalHash,
+              },
+              "*",
+            );
+        });
+
+        editor.on("save", async (e) => {
+          let newValue = await editor.getValue();
+
+          if (hasPrefix) {
+            newValue = prefixContent + newValue;
+          }
+
+          await targetHandle.write(newValue);
+
+          content = newValue.replace(prefixContent, "");
+
+          window.parent &&
+            window.parent.postMessage({ type: "save-file", totalHash }, "*");
+        });
+      }
+    </script>
+  </body>
+</html>
