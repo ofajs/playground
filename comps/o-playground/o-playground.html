@@ -314,9 +314,17 @@
 
                 _initResove();
               } else if (e.data.type === "save-file") {
+                if (e.data.totalHash !== this.totalHash) {
+                  return;
+                }
+
                 this.clickReload();
                 this.fileChanged = false;
               } else if (e.data.type === "change-file") {
+                if (e.data.totalHash !== this.totalHash) {
+                  return;
+                }
+
                 this.fileChanged = e.data.isChanged;
               }
             }),

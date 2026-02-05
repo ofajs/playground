@@ -73,7 +73,11 @@
 
           window.parent &&
             window.parent.postMessage(
-              { type: "change-file", isChanged: newValue !== content },
+              {
+                type: "change-file",
+                isChanged: newValue !== content,
+                totalHash,
+              },
               "*",
             );
         });
@@ -90,7 +94,7 @@
           content = newValue.replace(prefixContent, "");
 
           window.parent &&
-            window.parent.postMessage({ type: "save-file" }, "*");
+            window.parent.postMessage({ type: "save-file", totalHash }, "*");
         });
       }
     </script>
