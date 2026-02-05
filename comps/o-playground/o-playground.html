@@ -172,6 +172,12 @@
         },
         proto: {
           onFrameLoad(e) {
+            if (this._frameLoaded) {
+              return;
+            }
+
+            this._frameLoaded = 1;
+
             this.initPreview();
           },
           clickReload() {
