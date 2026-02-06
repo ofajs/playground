@@ -30,20 +30,23 @@
 <link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" \/>\n`;
 
       window.addEventListener("message", (e) => {
-        if (e.data.type === "setTheme") {
+        if (e.data.type === "setTheme" && e.data.theme) {
           $("monaco-editor").setTheme(e.data.theme);
           return;
         }
       });
 
+      const params = new URLSearchParams(location.search);
+      const totalHash = params.get("totalHash");
+      const codeFilePath = params.get("codeFilePath");
+
       initEditor();
+
+      window.parent &&
+        window.parent.postMessage({ type: "codeFrameLoaded", totalHash }, "*");
 
       async function initEditor() {
         const editor = $("monaco-editor");
-
-        const params = new URLSearchParams(location.search);
-        const totalHash = params.get("totalHash");
-        const codeFilePath = params.get("codeFilePath");
 
         const projectDirHandle = await get(`nos-demo-case/${totalHash}`);
 
