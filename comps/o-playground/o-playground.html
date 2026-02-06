@@ -239,18 +239,20 @@
         },
         watch: {
           theme(theme) {
+            this.sendTheme();
+          },
+        },
+        proto: {
+          sendTheme() {
             this.shadow.$("#code-frame") &&
               this.shadow.$("#code-frame").ele.contentWindow.postMessage(
                 {
-                  id: this._frameId,
                   type: "setTheme",
-                  theme,
+                  theme: this.theme,
                 },
                 "*",
               );
           },
-        },
-        proto: {
           onFrameLoad(e) {
             if (this._frameLoaded) {
               return;
@@ -422,6 +424,12 @@
                 }
 
                 this.fileChanged = e.data.isChanged;
+              } else if (
+                e.data.type === "codeFrameLoaded" &&
+                e.data.totalHash === this.totalHash
+              ) {
+                // 发送一次主题色
+                this.sendTheme();
               }
             }),
           );

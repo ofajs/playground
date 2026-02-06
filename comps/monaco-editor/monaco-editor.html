@@ -51,7 +51,8 @@
               );
             }
           },
-          setTheme(theme) {
+          async setTheme(theme) {
+            await this._initialized;
             this._postMessage("setTheme", { theme });
           },
           async setLanguage(lang) {
