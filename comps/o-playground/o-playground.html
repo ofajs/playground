@@ -276,15 +276,15 @@
           },
           // 获取代码并进行格式化等操作
           async getFileContent() {
-            const templates = this.all("template");
+            const codes = this.all("code");
 
             const files = await Promise.all(
-              templates
-                .map(async (temp) => {
-                  let path = temp.attr("path");
+              codes
+                .map(async (codeEl) => {
+                  let path = codeEl.attr("path");
 
                   if (!path) {
-                    if (templates.length === 1) {
+                    if (codes.length === 1) {
                       // 如果只是一个案例，则进行额外补充文件，修正path
                       path = "demo.html";
                     } else {
@@ -292,27 +292,18 @@
                     }
                   }
 
-                  const isComponent = temp.attr("component") !== null;
-                  const isPage = temp.attr("page") !== null;
+                  const isComponent = codeEl[0].attr("component") !== null;
+                  const isPage = codeEl[0].attr("page") !== null;
 
-                  let content = temp.html;
+                  let content = "";
 
                   if (isPage) {
-                    content = `<template page\>${content}</template>`;
+                    content = `<template page\>${codeEl[0].html}</template>`;
                   } else if (isComponent) {
-                    content = `<template component\>${content}</template>`;
+                    content = `<template component\>${codeEl[0].html}</template>`;
+                  } else {
+                    content = codeEl.html;
                   }
-
-                  // 将 xtext 替换为模版渲染的源内容（因为ofa.js 提前转为了xtext）
-                  const xtextArr = content.match(/<xtext.+>(.*?)<\/xtext>/g);
-
-                  xtextArr.forEach((item) => {
-                    const key = item.replace(
-                      /<xtext expr=['"](.+?)['"]><\/xtext>/,
-                      "$1",
-                    );
-                    content = content.replace(item, `{{${key}}}`);
-                  });
 
                   // 获取内容hash
                   const contentHash = await getHash(content);
