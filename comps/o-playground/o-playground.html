@@ -303,6 +303,17 @@
                     content = `<template component\>${content}</template>`;
                   }
 
+                  // 将 xtext 替换为模版渲染的源内容（因为ofa.js 提前转为了xtext）
+                  const xtextArr = content.match(/<xtext.+>(.*?)<\/xtext>/g);
+
+                  xtextArr.forEach((item) => {
+                    const key = item.replace(
+                      /<xtext expr=['"](.+?)['"]><\/xtext>/,
+                      "$1",
+                    );
+                    content = content.replace(item, `{{${key}}}`);
+                  });
+
                   // 获取内容hash
                   const contentHash = await getHash(content);
 
