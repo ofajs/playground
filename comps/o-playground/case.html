@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>demo code use case</title>
     <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"></script>
+    <!-- <script
+      src="http://localhost:3348/packages/ofa/main.mjs#debug"
+      type="module"
+    ></script> -->
     <link
       rel="stylesheet"
       href="https://core.noneos.com/nos-tool/css/palette.css"
@@ -16,6 +20,7 @@
   </head>
   <body>
     <l-m src="./o-playground.html"></l-m>
+
     <o-playground style="--editor-height: 300px">
       <code>
         <div id="target1">
@@ -32,15 +37,51 @@
 
     <br />
 
-    <o-playground style="--editor-height: 400px">
+    <o-playground style="--editor-height: 500px">
       <code>
         <template page>
-          <div>{{val}}</div>
+          <style>
+            :host {
+              display: block;
+              border: 1px solid red;
+              padding: 10px;
+            }
+            input {
+              margin: 5px;
+              padding: 5px;
+            }
+          </style>
+          <div>
+            <h3>邮箱验证示例</h3>
+            <input
+              type="email"
+              :value="email"
+              on:input="email = $event.target.value"
+              placeholder="输入邮箱地址"
+            />
+            <o-if :value="email && isValidEmail(email)">
+              <p style="color: green">✓ 邮箱格式正确</p>
+            </o-if>
+            <o-else-if
+              :value="email && !isValidEmail(email) && email.length > 0"
+            >
+              <p style="color: red">✗ 邮箱格式不正确</p>
+            </o-else-if>
+            <o-else>
+              <p style="color: orange">请输入邮箱地址进行验证</p>
+            </o-else>
+          </div>
           <script>
-            export default () => {
+            export default async () => {
               return {
                 data: {
-                  val: "Hello world",
+                  email: "",
+                },
+                proto: {
+                  isValidEmail(email) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    return emailRegex.test(email);
+                  },
                 },
               };
             };
