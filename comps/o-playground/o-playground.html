@@ -261,7 +261,9 @@
 
             this._frameLoaded = 1;
 
-            this.initPreview();
+            if (this._isVisible) {
+              this.initPreview();
+            }
           },
           clickReload() {
             if (this._clicked) {
@@ -436,9 +438,30 @@
               }
             }),
           );
+
+          // 监听当前组件出现在可视范围时，进行初始化
+          this._observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  if (this._isVisible) {
+                    return;
+                  }
+                  this._isVisible = 1;
+                  if (this._frameLoaded) {
+                    this.initPreview();
+                    this._observer.disconnect();
+                  }
+                }
+              });
+            },
+            { threshold: 0.1 },
+          );
+          this._observer.observe(this.ele);
         },
         detached() {
           this._init_f && window.removeEventListener("message", this._init_f);
+          this._observer && this._observer.disconnect();
         },
       };
     };
