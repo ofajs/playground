@@ -237,6 +237,7 @@
           fsInitialized: false,
           fileChanged: false,
           isMac: navigator.userAgent.indexOf("Mac") !== -1,
+          error: "",
         },
         watch: {
           theme(theme) {
@@ -304,6 +305,12 @@
                     content = `<template page\>${decodeHTMLEntities(codeEl[0].html)}</template>`;
                   } else if (isComponent) {
                     content = `<template component\>${decodeHTMLEntities(codeEl[0].html)}</template>`;
+                  } else if (
+                    codeEl.length === 1 &&
+                    codeEl[0].tag === "template"
+                  ) {
+                    // 解套
+                    content = decodeHTMLEntities(codeEl[0].html);
                   } else {
                     content = decodeHTMLEntities(codeEl.html);
                   }
@@ -324,12 +331,17 @@
                       content;
                   }
 
+                  const active = codeEl.attr("active") !== null;
+                  const preview = codeEl.attr("preview") !== null;
+
                   return {
                     contentHash,
                     path,
                     content,
                     isComponent,
                     isPage,
+                    active,
+                    preview,
                   };
                 })
                 .filter((item) => !!item),
@@ -348,14 +360,19 @@
           async initPreview() {
             const data = await this.getFileContent();
 
-            let previewFileData = data.files.find(
-              (item) => !item.isPage && !item.isComponent,
-            );
+            let previewFileData = data.files.find((item) => item.preview);
+
+            if (!previewFileData) {
+              // 查不到预览文件，则查找普通文件
+              previewFileData = data.files.find(
+                (item) => !item.isPage && !item.isComponent,
+              );
+            }
 
             if (data.files.length === 1) {
               data.files[0].active = true;
 
-              // 如果只有一个文件，而且不具备mainFile，则添加辅助文件
+              // 如果只有一个文件，而且是page模块，则添加辅助加载文件
               if (!previewFileData) {
                 if (data.files[0].isPage) {
                   previewFileData = {
