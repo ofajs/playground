@@ -6,6 +6,7 @@
       container-type: inline-size; /* 启用基于内联尺寸（通常是宽度）的容器查询 */
       border-radius: 8px;
       border: 1px solid var(--md-sys-color-primary);
+      border-top: none;
       overflow: hidden;
     }
 
@@ -114,6 +115,66 @@
     .hide {
       display: none;
     }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      flex: 1;
+      height: 100%;
+    }
+    .tab {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 0 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: inherit;
+    }
+
+    .tab:hover {
+      color: var(--md-sys-color-primary-container);
+      background-color: var(--md-sys-color-on-primary-container);
+    }
+
+    .tab.active {
+      color: var(--md-sys-color-primary-container);
+      background-color: var(--md-sys-color-on-primary-container);
+      &:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--md-sys-color-primary-container);
+      }
+    }
+
+    .tips {
+      position: absolute;
+      z-index: 3;
+      right: 8px;
+      top: 8px;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease-in-out;
+      padding: 4px 8px;
+      border-radius: 20px;
+      background-color: var(--md-sys-color-primary-container);
+    }
+
+    .hide-tips {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .tips-text {
+      margin-left: 4px;
+      font-size: 12px;
+    }
   </style>
   <div class="mask" class:hide="fsInitialized">
     <div class="spinner"></div>
@@ -121,26 +182,26 @@
   <div class="outer">
     <div class="container" style="height: var(--editor-height)">
       <div class="top-bar">
-        <div style="flex: 1"></div>
-
-        <div
-          style="display: flex; align-items: center"
-          :style.opacity="fileChanged ? 1 : 0.5"
-        >
+        <div class="tabs">
+          <o-fill :value="fileItems">
+            <div
+              class="tab"
+              on:click="$host.clickTab($data)"
+              class:active="$data.active"
+            >
+              {{$data.path}}
+            </div>
+          </o-fill>
+        </div>
+      </div>
+      <div class="content">
+        <div class="tips" class:hide-tips="!fileChanged">
           <n-icon icon="material-symbols:save-outline"></n-icon>
-          <div
-            style="
-              margin-left: 4px;
-              font-size: 14px;
-              color: var(--md-sys-color-on-primary, #838383);
-            "
-          >
+          <div class="tips-text">
             <o-if :value="isMac"> cmd + s </o-if>
             <o-else> ctrl + s </o-else>
           </div>
         </div>
-      </div>
-      <div class="content">
         <o-if :value="fsInitialized">
           <iframe
             attr:src="'./code.html?totalHash=' + totalHash + '&codeFilePath=' + codeFilePath"
@@ -230,6 +291,7 @@
         tag: "o-playground",
         data: {
           theme: "",
+          fileItems: [],
           codeFilePath: null, // 查看代码的文件路径
           previewPath: null, // 预览路径
           frameId: null, // 组件id
@@ -245,6 +307,14 @@
           },
         },
         proto: {
+          clickTab(tab) {
+            if (tab.active) {
+              return;
+            }
+
+            this.fileItems.forEach((file) => (file.active = false));
+            tab.active = true;
+          },
           sendTheme() {
             this.shadow.$("#code-frame") &&
               this.shadow.$("#code-frame").ele.contentWindow.postMessage(
@@ -367,6 +437,9 @@
               previewFileData = data.files.find(
                 (item) => !item.isPage && !item.isComponent,
               );
+              if (previewFileData) {
+                previewFileData.preview = true; // 预览文件
+              }
             }
 
             if (data.files.length === 1) {
@@ -404,6 +477,8 @@
             const activeFileData = data.files.find((item) => item.active);
 
             this.codeFilePath = activeFileData.path; // 查看代码的文件路径
+
+            this.fileItems = data.files;
 
             await new Promise((resolve) => {
               let f;
