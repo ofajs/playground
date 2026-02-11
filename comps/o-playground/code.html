@@ -35,7 +35,7 @@
 
       const params = new URLSearchParams(location.search);
       const totalHash = params.get("totalHash");
-      const codeFilePath = params.get("codeFilePath");
+      const activeFilePath = params.get("activeFilePath");
 
       initEditor();
 
@@ -51,7 +51,7 @@
           return;
         }
 
-        const targetHandle = await projectDirHandle.get(codeFilePath);
+        const targetHandle = await projectDirHandle.get(activeFilePath);
 
         let content = await targetHandle.text();
 

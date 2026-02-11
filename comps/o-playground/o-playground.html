@@ -187,7 +187,7 @@
             <div
               class="tab"
               on:click="$host.clickTab($data)"
-              class:active="$data.active"
+              class:active="$host.activeFilePath === $data.path"
             >
               {{$data.path}}
             </div>
@@ -204,7 +204,7 @@
         </div>
         <o-if :value="fsInitialized">
           <iframe
-            attr:src="'./code.html?totalHash=' + totalHash + '&codeFilePath=' + codeFilePath"
+            attr:src="'./code.html?totalHash=' + totalHash + '&activeFilePath=' + activeFilePath"
             id="code-frame"
           ></iframe>
         </o-if>
@@ -292,7 +292,7 @@
         data: {
           theme: "",
           fileItems: [],
-          codeFilePath: null, // 查看代码的文件路径
+          activeFilePath: null, // 查看代码的文件路径
           previewPath: null, // 预览路径
           frameId: null, // 组件id
           totalHash: null,
@@ -313,7 +313,7 @@
             }
 
             this.fileItems.forEach((file) => (file.active = false));
-            tab.active = true;
+            this.activeFilePath = tab.path;
           },
           sendTheme() {
             this.shadow.$("#code-frame") &&
@@ -410,7 +410,7 @@
                     content,
                     isComponent,
                     isPage,
-                    active,
+                    defaultActive: active,
                     preview,
                   };
                 })
@@ -443,7 +443,7 @@
             }
 
             if (data.files.length === 1) {
-              data.files[0].active = true;
+              data.files[0].defaultActive = true;
 
               // 如果只有一个文件，而且是page模块，则添加辅助加载文件
               if (!previewFileData) {
@@ -474,9 +474,11 @@
               "*",
             );
 
-            const activeFileData = data.files.find((item) => item.active);
+            const activeFileData = data.files.find(
+              (item) => item.defaultActive,
+            );
 
-            this.codeFilePath = activeFileData.path; // 查看代码的文件路径
+            this.activeFilePath = activeFileData.path; // 查看代码的文件路径
 
             this.fileItems = data.files;
 
