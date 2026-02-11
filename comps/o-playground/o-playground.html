@@ -189,9 +189,18 @@
               on:click="$host.handleTabClick($data)"
               class:active="$host.activeFilePath === $data.path"
             >
+              <o-if :value="$host.previewFileItemPath === $data.path">
+                <n-icon
+                  icon="lets-icons:view"
+                  style="margin-right: 4px; font-size: 16px"
+                ></n-icon>
+              </o-if>
               {{$data.path}}
             </div>
           </o-fill>
+        </div>
+        <div class="top-btn">
+          <n-icon icon="uil:setting"></n-icon>
         </div>
       </div>
       <div class="content">
@@ -212,10 +221,10 @@
     </div>
     <div class="container" style="height: var(--preview-height)">
       <div class="top-bar">
-        <div class="top-btn" on:click="handleReloadClick">
-          <n-icon icon="mdi:reload"></n-icon>
-        </div>
         <o-if :value="previewPath">
+          <div class="top-btn" on:click="handleReloadClick">
+            <n-icon icon="mdi:reload"></n-icon>
+          </div>
           <a class="top-btn" attr:href="previewPath" target="_blank">
             <n-icon icon="majesticons:open"></n-icon>
           </a>
@@ -293,6 +302,7 @@
           theme: "",
           fileItems: [],
           activeFilePath: null, // 查看代码的文件路径
+          previewFileItemPath: null, // 预览文件项
           previewPath: null, // 预览路径
           previewFrameId: null, // 预览框架ID
           totalHash: null,
@@ -451,6 +461,7 @@
                   previewFileData = {
                     path: "index.html",
                     content: `${prefixContent}\n<o-page src="./${data.files[0].path}"></o-page>`,
+                    unimportant: true,
                     isComponent: false,
                     isPage: false,
                     preview: true,
@@ -491,6 +502,7 @@
                     e.data.type === "preview-url" &&
                     e.data.frameId === this.previewFrameId
                   ) {
+                    this.previewFileItemPath = previewFileData.path;
                     this.previewPath = e.data.href + "/" + previewFileData.path;
                     this.isPreviewReady = true;
                     // 移除事件监听
@@ -554,7 +566,8 @@
           this._visibilityObserver.observe(this.ele);
         },
         detached() {
-          this._messageHandler && window.removeEventListener("message", this._messageHandler);
+          this._messageHandler &&
+            window.removeEventListener("message", this._messageHandler);
           this._visibilityObserver && this._visibilityObserver.disconnect();
         },
       };
