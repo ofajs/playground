@@ -38,6 +38,45 @@
     <br />
 
     <o-playground style="--editor-height: 500px">
+      <code path="demo.html" preview unimportant>
+        <template>
+          <o-page src="./demo-page.html"></o-page>
+        </template>
+      </code>
+      <code path="demo-page.html">
+        <template page>
+          <l-m src="./cc.html"></l-m>
+          <div id="target1">
+            <p>Hello NoneOS Demo Code</p>
+          </div>
+          <cc-comp></cc-comp>
+        </template>
+      </code>
+      <code path="cc.html" active>
+        <template component>
+          <style>
+            :host {
+              display: block;
+            }
+          </style>
+          <h3>{{title}}</h3>
+          <script>
+            export default async ({ load }) => {
+              return {
+                tag: "cc-comp",
+                data: {
+                  title: "NoneOS 组件示例",
+                },
+              };
+            };
+          </script>
+        </template>
+      </code>
+    </o-playground>
+
+    <br>
+
+    <o-playground style="--editor-height: 500px">
       <code>
         <template page>
           <style>
@@ -72,6 +111,7 @@
             </o-else>
           </div>
           <script>
+            // eslint-disable-next-line
             export default async () => {
               return {
                 data: {

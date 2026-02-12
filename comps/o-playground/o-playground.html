@@ -16,6 +16,7 @@
     }
 
     .container {
+      position: relative;
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -114,47 +115,164 @@
     .hide {
       display: none;
     }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      flex: 1;
+      height: 100%;
+    }
+    .tab {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 0 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: inherit;
+      margin-right: 2px;
+    }
+
+    .tab:hover {
+      color: var(--md-sys-color-primary-container);
+      background-color: var(--md-sys-color-on-primary-container);
+    }
+
+    .tab.active {
+      color: var(--md-sys-color-primary-container);
+      background-color: var(--md-sys-color-on-primary-container);
+      &:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--md-sys-color-primary-container);
+      }
+    }
+
+    .tab.hide {
+      display: none;
+    }
+
+    .tips {
+      position: absolute;
+      z-index: 3;
+      right: 8px;
+      top: 8px;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease-in-out;
+      padding: 4px 8px;
+      border-radius: 20px;
+      background-color: var(--md-sys-color-primary-container);
+    }
+
+    .hide-tips {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .tips-text {
+      margin-left: 4px;
+      font-size: 12px;
+    }
+
+    .top-setting-tips {
+    }
   </style>
-  <div class="mask" class:hide="fsInitialized">
+  <div class="mask" class:hide="isPreviewReady">
     <div class="spinner"></div>
   </div>
   <div class="outer">
     <div class="container" style="height: var(--editor-height)">
       <div class="top-bar">
-        <div style="flex: 1"></div>
-
-        <div
-          style="display: flex; align-items: center"
-          :style.opacity="fileChanged ? 1 : 0.5"
-        >
+        <div class="tabs">
+          <o-fill :value="fileItems">
+            <div
+              class="tab"
+              on:click="$host.handleTabClick($data)"
+              class:active="$host.activeFilePath === $data.path"
+              class:hide="$host.hideUnimportantFiles && $data.unimportant"
+            >
+              <o-if :value="$host.previewFileItemPath === $data.path">
+                <n-icon
+                  icon="lets-icons:view"
+                  style="margin-right: 4px; font-size: 16px"
+                ></n-icon>
+              </o-if>
+              {{$data.path}}
+            </div>
+          </o-fill>
+        </div>
+        <div class="top-btn" on:click="showConfig = true">
+          <n-icon icon="uil:setting"></n-icon>
+        </div>
+      </div>
+      <div class="content">
+        <div class="tips" class:hide-tips="!hasUnsavedChanges">
           <n-icon icon="material-symbols:save-outline"></n-icon>
-          <div
-            style="
-              margin-left: 4px;
-              font-size: 14px;
-              color: var(--md-sys-color-on-primary, #838383);
-            "
-          >
+          <div class="tips-text">
             <o-if :value="isMac"> cmd + s </o-if>
             <o-else> ctrl + s </o-else>
           </div>
         </div>
-      </div>
-      <div class="content">
-        <o-if :value="fsInitialized">
+        <o-if :value="isPreviewReady">
           <iframe
-            attr:src="'./code.html?totalHash=' + totalHash + '&codeFilePath=' + codeFilePath"
+            attr:src="'./code.html?totalHash=' + totalHash + '&activeFilePath=' + activeFilePath"
             id="code-frame"
           ></iframe>
         </o-if>
       </div>
+
+      <style>
+        .setting-dialog {
+          position: absolute;
+          z-index: 2;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease-in-out;
+          background-color: rgba(
+            from var(--md-sys-color-normal-container) r g b / 0.5
+          );
+          user-select: none;
+        }
+        .hide {
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .setting-content {
+          padding: 16px;
+          border-radius: 8px;
+        }
+      </style>
+
+      <div
+        class="setting-dialog"
+        on:click="showConfig = false"
+        class:hide="!showConfig"
+      >
+        <div class="setting-content" on:click="$event.stopPropagation()">
+          <label>
+            <input type="checkbox" sync:checked="hideUnimportantFiles" />
+            Hide unimportant files
+          </label>
+        </div>
+      </div>
     </div>
     <div class="container" style="height: var(--preview-height)">
       <div class="top-bar">
-        <div class="top-btn" on:click="clickReload">
-          <n-icon icon="mdi:reload"></n-icon>
-        </div>
         <o-if :value="previewPath">
+          <div class="top-btn" on:click="handleReloadClick">
+            <n-icon icon="mdi:reload"></n-icon>
+          </div>
           <a class="top-btn" attr:href="previewPath" target="_blank">
             <n-icon icon="majesticons:open"></n-icon>
           </a>
@@ -164,12 +282,12 @@
         <o-if :value="previewPath">
           <iframe attr:src="previewPath"></iframe>
         </o-if>
-        <o-else-if :value="!!frameId">
+        <o-else-if :value="!!previewFrameId">
           <iframe
             id="writer-frame"
-            attr:src="'./writer.html?frameId=' + frameId"
+            attr:src="'./writer.html?frameId=' + previewFrameId"
             src="./code.html"
-            on:load="onFrameLoad"
+            on:load="handleWriterFrameLoad"
           ></iframe>
         </o-else-if>
       </div>
@@ -183,13 +301,13 @@
     export default async ({ load, url }) => {
       // 等待系统安装完成
       const systemInstalled = new Promise((resolve) => {
-        let f;
+        let systemInstalledHandler;
         window.addEventListener(
           "message",
-          (f = (e) => {
+          (systemInstalledHandler = (e) => {
             if (e.data.type === "system-installed") {
               writerFrame.remove();
-              window.removeEventListener("message", f);
+              window.removeEventListener("message", systemInstalledHandler);
               resolve();
             }
           }),
@@ -202,8 +320,8 @@
         $("body").push(writerFrame);
       });
 
-      // 判断当前系统有没有安装nos
-      const currentInstallNos = await fetch("/nos/nos.json")
+      // 检查本地是否已安装nos
+      const hasLocalInstallation = await fetch("/nos/nos.json")
         .then((res) => res.json())
         .catch(() => null);
 
@@ -216,7 +334,7 @@
       const remotePrefix = "https://core.noneos.com";
 
       const prefix =
-        currentInstallNos && configData?.serviceWorkerVersion
+        hasLocalInstallation && configData?.serviceWorkerVersion
           ? localPrefix
           : remotePrefix;
 
@@ -230,13 +348,18 @@
         tag: "o-playground",
         data: {
           theme: "",
-          codeFilePath: null, // 查看代码的文件路径
+          fileItems: [],
+          activeFilePath: null, // 查看代码的文件路径
+          previewFileItemPath: null, // 预览文件项
           previewPath: null, // 预览路径
-          frameId: null, // 组件id
+          previewFrameId: null, // 预览框架ID
           totalHash: null,
-          fsInitialized: false,
-          fileChanged: false,
+          isPreviewReady: false,
+          hasUnsavedChanges: false,
           isMac: navigator.userAgent.indexOf("Mac") !== -1,
+          errorMessage: "",
+          showConfig: false, // 是否显示配置弹窗
+          hideUnimportantFiles: true, // 是否隐藏不重要的文件
         },
         watch: {
           theme(theme) {
@@ -244,6 +367,14 @@
           },
         },
         proto: {
+          handleTabClick(tab) {
+            if (tab.active) {
+              return;
+            }
+
+            this.fileItems.forEach((file) => (file.active = false));
+            this.activeFilePath = tab.path;
+          },
           sendTheme() {
             this.shadow.$("#code-frame") &&
               this.shadow.$("#code-frame").ele.contentWindow.postMessage(
@@ -254,27 +385,27 @@
                 "*",
               );
           },
-          onFrameLoad(e) {
-            if (this._frameLoaded) {
+          handleWriterFrameLoad(e) {
+            if (this._isWriterFrameLoaded) {
               return;
             }
 
-            this._frameLoaded = 1;
+            this._isWriterFrameLoaded = true;
 
-            if (this._isVisible) {
+            if (this._isComponentVisible) {
               this.initPreview();
             }
           },
-          clickReload() {
-            if (this._clicked) {
+          handleReloadClick() {
+            if (this._isReloadInProgress) {
               return;
             }
-            this._clicked = true;
+            this._isReloadInProgress = true;
             const url = this.previewPath;
             this.previewPath = "";
             setTimeout(() => {
               this.previewPath = url;
-              this._clicked = null;
+              this._isReloadInProgress = false;
             }, 100);
           },
           // 获取代码并进行格式化等操作
@@ -304,6 +435,12 @@
                     content = `<template page\>${decodeHTMLEntities(codeEl[0].html)}</template>`;
                   } else if (isComponent) {
                     content = `<template component\>${decodeHTMLEntities(codeEl[0].html)}</template>`;
+                  } else if (
+                    codeEl.length === 1 &&
+                    codeEl[0].tag === "template"
+                  ) {
+                    // 解套
+                    content = decodeHTMLEntities(codeEl[0].html);
                   } else {
                     content = decodeHTMLEntities(codeEl.html);
                   }
@@ -324,12 +461,19 @@
                       content;
                   }
 
+                  const active = codeEl.attr("active") !== null;
+                  const preview = codeEl.attr("preview") !== null;
+                  const unimportant = codeEl.attr("unimportant") !== null;
+
                   return {
                     contentHash,
                     path,
                     content,
                     isComponent,
                     isPage,
+                    defaultActive: active,
+                    preview,
+                    unimportant,
                   };
                 })
                 .filter((item) => !!item),
@@ -348,19 +492,28 @@
           async initPreview() {
             const data = await this.getFileContent();
 
-            let previewFileData = data.files.find(
-              (item) => !item.isPage && !item.isComponent,
-            );
+            let previewFileData = data.files.find((item) => item.preview);
+
+            if (!previewFileData) {
+              // 查不到预览文件，则查找普通文件
+              previewFileData = data.files.find(
+                (item) => !item.isPage && !item.isComponent,
+              );
+              if (previewFileData) {
+                previewFileData.preview = true; // 预览文件
+              }
+            }
 
             if (data.files.length === 1) {
-              data.files[0].active = true;
+              data.files[0].defaultActive = true;
 
-              // 如果只有一个文件，而且不具备mainFile，则添加辅助文件
+              // 如果只有一个文件，而且是page模块，则添加辅助加载文件
               if (!previewFileData) {
                 if (data.files[0].isPage) {
                   previewFileData = {
                     path: "index.html",
                     content: `${prefixContent}\n<o-page src="./${data.files[0].path}"></o-page>`,
+                    unimportant: true,
                     isComponent: false,
                     isPage: false,
                     preview: true,
@@ -384,23 +537,28 @@
               "*",
             );
 
-            const activeFileData = data.files.find((item) => item.active);
+            const activeFileData = data.files.find(
+              (item) => item.defaultActive,
+            );
 
-            this.codeFilePath = activeFileData.path; // 查看代码的文件路径
+            this.activeFilePath = activeFileData.path; // 查看代码的文件路径
+
+            this.fileItems = data.files;
 
             await new Promise((resolve) => {
-              let f;
+              let previewUrlHandler;
               $(window).on(
                 "message",
-                (f = (e) => {
+                (previewUrlHandler = (e) => {
                   if (
                     e.data.type === "preview-url" &&
-                    e.data.frameId === this.frameId
+                    e.data.frameId === this.previewFrameId
                   ) {
+                    this.previewFileItemPath = previewFileData.path;
                     this.previewPath = e.data.href + "/" + previewFileData.path;
-                    this.fsInitialized = true;
+                    this.isPreviewReady = true;
                     // 移除事件监听
-                    $(window).off("message", f);
+                    $(window).off("message", previewUrlHandler);
                     resolve();
                   }
                 }),
@@ -410,25 +568,25 @@
         },
         async ready() {
           await systemInstalled;
-          this.frameId = Math.random().toString(36).slice(2);
+          this.previewFrameId = Math.random().toString(36).slice(2);
         },
         async attached() {
           window.addEventListener(
             "message",
-            (this._init_f = (e) => {
+            (this._messageHandler = (e) => {
               if (e.data.type === "save-file") {
                 if (e.data.totalHash !== this.totalHash) {
                   return;
                 }
 
-                this.clickReload();
-                this.fileChanged = false;
+                this.handleReloadClick();
+                this.hasUnsavedChanges = false;
               } else if (e.data.type === "change-file") {
                 if (e.data.totalHash !== this.totalHash) {
                   return;
                 }
 
-                this.fileChanged = e.data.isChanged;
+                this.hasUnsavedChanges = e.data.isChanged;
               } else if (
                 e.data.type === "codeFrameLoaded" &&
                 e.data.totalHash === this.totalHash
@@ -440,28 +598,29 @@
           );
 
           // 监听当前组件出现在可视范围时，进行初始化
-          this._observer = new IntersectionObserver(
+          this._visibilityObserver = new IntersectionObserver(
             (entries) => {
               entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                  if (this._isVisible) {
+                  if (this._isComponentVisible) {
                     return;
                   }
-                  this._isVisible = 1;
-                  if (this._frameLoaded) {
+                  this._isComponentVisible = true;
+                  if (this._isWriterFrameLoaded) {
                     this.initPreview();
-                    this._observer.disconnect();
+                    this._visibilityObserver.disconnect();
                   }
                 }
               });
             },
             { threshold: 0.1 },
           );
-          this._observer.observe(this.ele);
+          this._visibilityObserver.observe(this.ele);
         },
         detached() {
-          this._init_f && window.removeEventListener("message", this._init_f);
-          this._observer && this._observer.disconnect();
+          this._messageHandler &&
+            window.removeEventListener("message", this._messageHandler);
+          this._visibilityObserver && this._visibilityObserver.disconnect();
         },
       };
     };
