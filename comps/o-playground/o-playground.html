@@ -121,6 +121,7 @@
       flex-wrap: wrap;
       flex: 1;
       height: 100%;
+      user-select: none;
     }
     .tab {
       position: relative;
@@ -597,19 +598,27 @@
             }),
           );
 
+          let inspectTimer = null;
+
           // 监听当前组件出现在可视范围时，进行初始化
           this._visibilityObserver = new IntersectionObserver(
             (entries) => {
               entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                   if (this._isComponentVisible) {
+                    // 已经初始化过，不用再执行
                     return;
                   }
-                  this._isComponentVisible = true;
-                  if (this._isWriterFrameLoaded) {
-                    this.initPreview();
+
+                  inspectTimer = setTimeout(() => {
+                    if (this._isWriterFrameLoaded) {
+                      this.initPreview();
+                    }
                     this._visibilityObserver.disconnect();
-                  }
+                    this._isComponentVisible = true;
+                  }, 300);
+                } else {
+                  clearTimeout(inspectTimer);
                 }
               });
             },
