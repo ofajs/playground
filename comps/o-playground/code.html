@@ -51,6 +51,19 @@
           return;
         }
 
+        // 根据activeFilePath的后缀，设置 editor 的lang
+        let lang = activeFilePath.split(".").pop().toLowerCase();
+        switch (lang) {
+          case "js":
+          case "ts":
+          case "jsx":
+          case "tsx":
+            lang = "javascript";
+            break;
+        }
+
+        editor.setLanguage(lang);
+
         const targetHandle = await projectDirHandle.get(activeFilePath);
 
         let content = await targetHandle.text();
