@@ -427,21 +427,26 @@
                     }
                   }
 
-                  const isComponent = codeEl[0].attr("component") !== null;
-                  const isPage = codeEl[0].attr("page") !== null;
+                  const firstCodeChild = codeEl[0];
+
+                  const isComponent =
+                    firstCodeChild &&
+                    firstCodeChild.attr("component") !== null;
+                  const isPage =
+                    firstCodeChild && firstCodeChild.attr("page") !== null;
 
                   let content = "";
 
                   if (isPage) {
-                    content = `<template page\>${decodeHTMLEntities(codeEl[0].html)}</template>`;
+                    content = `<template page\>${decodeHTMLEntities(firstCodeChild.html)}</template>`;
                   } else if (isComponent) {
-                    content = `<template component\>${decodeHTMLEntities(codeEl[0].html)}</template>`;
+                    content = `<template component\>${decodeHTMLEntities(firstCodeChild.html)}</template>`;
                   } else if (
                     codeEl.length === 1 &&
-                    codeEl[0].tag === "template"
+                    firstCodeChild.tag === "template"
                   ) {
                     // 解套
-                    content = decodeHTMLEntities(codeEl[0].html);
+                    content = decodeHTMLEntities(firstCodeChild.html);
                   } else {
                     content = decodeHTMLEntities(codeEl.html);
                   }
@@ -449,7 +454,7 @@
                   // 获取内容hash
                   const contentHash = await getHash(content);
 
-                  if (!isComponent && !isPage) {
+                  if (!isComponent && !isPage && !!firstCodeChild) {
                     // 加上样式
                     content =
                       `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" />` +

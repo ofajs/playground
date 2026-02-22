@@ -21,7 +21,7 @@
   <body>
     <l-m src="./o-playground.html"></l-m>
 
-    <o-playground style="--editor-height: 300px">
+    <!-- <o-playground style="--editor-height: 300px">
       <code>
         <div id="target1">
           <p>Hello NoneOS Demo Code</p>
@@ -33,11 +33,42 @@
           }, 500);
         </script>
       </code>
-    </o-playground>
+    </o-playground> -->
 
     <br />
 
     <o-playground style="--editor-height: 500px">
+      <code path="demo.html" preview active>
+        <template>
+          <o-app src="./app-config.js"></o-app>
+        </template>
+      </code>
+      <code path="app-config.js" lang="javascript">
+        export const home = "./home.html";
+      </code>
+      <code path="home.html">
+        <template page>
+          <style>
+            :host {
+              display: block;
+              padding: 10px;
+            }
+          </style>
+          <p>{{val}}</p>
+          <script>
+            export default async () => {
+              return {
+                data: {
+                  val: "Hello ofa.js App Demo",
+                },
+              };
+            };
+          </script>
+        </template>
+      </code>
+    </o-playground>
+
+    <!-- <o-playground style="--editor-height: 500px">
       <code path="demo.html" preview unimportant>
         <template>
           <o-page src="./demo-page.html"></o-page>
@@ -72,11 +103,11 @@
           </script>
         </template>
       </code>
-    </o-playground>
+    </o-playground> -->
 
-    <br>
+    <br />
 
-    <o-playground style="--editor-height: 500px">
+    <!-- <o-playground style="--editor-height: 500px">
       <code>
         <template page>
           <style>
@@ -128,6 +159,6 @@
           </script>
         </template>
       </code>
-    </o-playground>
+    </o-playground> -->
   </body>
 </html>
