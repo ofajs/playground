@@ -9,37 +9,6 @@
       overflow: hidden;
     }
 
-    .outer {
-      width: 100%;
-      height: 100%;
-      display: flex;
-    }
-
-    .container {
-      position: relative;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 200px;
-    }
-
-    .container {
-      border-left: 1px solid var(--md-sys-color-primary);
-    }
-
-    @container (max-width: 640px) {
-      .outer {
-        display: block;
-      }
-      .container {
-        border-left: none;
-      }
-    }
-
-    .container:first-child {
-      border-left: none;
-    }
-
     .top-bar {
       display: flex;
       align-items: center;
@@ -181,15 +150,12 @@
       margin-left: 4px;
       font-size: 12px;
     }
-
-    .top-setting-tips {
-    }
   </style>
   <div class="mask" class:hide="isPreviewReady">
     <div class="spinner"></div>
   </div>
-  <div class="outer">
-    <div class="container" style="height: var(--editor-height)">
+  <o-page src="./playground-layout.html">
+    <div slot="editor">
       <div class="top-bar">
         <div class="tabs">
           <o-fill :value="fileItems">
@@ -268,7 +234,7 @@
         </div>
       </div>
     </div>
-    <div class="container" style="height: var(--preview-height)">
+    <div slot="preview">
       <div class="top-bar">
         <o-if :value="previewPath">
           <div class="top-btn" on:click="handleReloadClick">
@@ -293,7 +259,7 @@
         </o-else-if>
       </div>
     </div>
-  </div>
+  </o-page>
 
   <o-consumer name="pui" watch:theme="theme"></o-consumer>
 
@@ -454,7 +420,12 @@
                   // 获取内容hash
                   const contentHash = await getHash(content);
 
-                  if (!isComponent && !isPage && !!firstCodeChild && firstCodeChild.tag === "template") {
+                  if (
+                    !isComponent &&
+                    !isPage &&
+                    !!firstCodeChild &&
+                    firstCodeChild.tag === "template"
+                  ) {
                     // 加上样式
                     content =
                       `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" />` +
