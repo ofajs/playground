@@ -89,7 +89,7 @@
       <slot name="editor"></slot>
     </div>
     <div class="container" style="height: var(--preview-height)">
-      <div class="resize-line" on:mousedown="lineMounseDown"></div>
+      <div class="resize-line" on:mousedown="lineMouseDown"></div>
       <slot name="preview"></slot>
     </div>
   </div>
@@ -100,7 +100,7 @@
           showMask: false,
         },
         proto: {
-          lineMounseDown(e) {
+          lineMouseDown(e) {
             this.showMask = true;
             this._startX = e.clientX;
             this._startWidth =
@@ -110,7 +110,12 @@
             const deltaX = e.clientX - this._startX;
 
             const finalWidth = this.getFinalWidth(this._startWidth + deltaX);
-            localStorage.setItem("playground-editor-width", finalWidth);
+
+            clearTimeout(this._timer);
+
+            this._timer = setTimeout(() => {
+              localStorage.setItem("playground-editor-width", finalWidth);
+            }, 100);
 
             this.shadow.$("#editor-container").style.flex =
               `0 0 ${finalWidth}px`;
