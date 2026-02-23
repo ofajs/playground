@@ -154,7 +154,7 @@
   <div class="mask" class:hide="isPreviewReady">
     <div class="spinner"></div>
   </div>
-  <o-page src="./playground-layout.html">
+  <o-page id="layout-page" src="./playground-layout.html">
     <div slot="editor">
       <div class="top-bar">
         <div class="tabs">
@@ -231,6 +231,9 @@
             <input type="checkbox" sync:checked="hideUnimportantFiles" />
             Hide unimportant files
           </label>
+          <div>
+            <button on:click="clearEditorResize">Restore Editor Size</button>
+          </div>
         </div>
       </div>
     </div>
@@ -334,6 +337,13 @@
           },
         },
         proto: {
+          clearEditorResize() {
+            localStorage.removeItem("playground-editor-width");
+
+            this.shadow
+              .$("#layout-page")
+              .shadow.$("#editor-container").style.flex = "";
+          },
           handleTabClick(tab) {
             if (tab.active) {
               return;
