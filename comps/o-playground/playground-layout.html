@@ -1,0 +1,143 @@
+<template page>
+  <style>
+    :host {
+      display: block;
+    }
+
+    ::slotted([slot]) {
+      display: contents;
+    }
+
+    .outer {
+      width: 100%;
+      height: 100%;
+      display: flex;
+    }
+
+    .container {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+    }
+
+    .container {
+      border-left: 1px solid var(--md-sys-color-primary);
+    }
+
+    @container (max-width: 640px) {
+      .outer {
+        display: block;
+      }
+      .container {
+        border-left: none;
+      }
+    }
+
+    .container:first-child {
+      border-left: none;
+    }
+
+    .resize-line {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 6px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 2;
+      user-select: none;
+    }
+
+    .resize-mask {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 3;
+      user-select: none;
+    }
+
+    .hide {
+      display: none;
+    }
+
+    @container (max-width: 640px) {
+      .resize-line {
+        display: none;
+      }
+    }
+  </style>
+
+  <div
+    class="resize-mask"
+    class:hide="!showMask"
+    on:mousemove="mouseMove"
+    on:mouseup="mouseup"
+    on:mouseout="mouseup"
+  ></div>
+
+  <div class="outer">
+    <div
+      class="container"
+      id="editor-container"
+      style="height: var(--editor-height)"
+    >
+      <slot name="editor"></slot>
+    </div>
+    <div class="container" style="height: var(--preview-height)">
+      <div class="resize-line" on:mousedown="lineMouseDown"></div>
+      <slot name="preview"></slot>
+    </div>
+  </div>
+  <script>
+    export default async () => {
+      return {
+        data: {
+          showMask: false,
+        },
+        proto: {
+          lineMouseDown(e) {
+            this.showMask = true;
+            this._startX = e.clientX;
+            this._startWidth =
+              this.shadow.$("#editor-container").ele.clientWidth;
+          },
+          mouseMove(e) {
+            const deltaX = e.clientX - this._startX;
+
+            const finalWidth = this.getFinalWidth(this._startWidth + deltaX);
+
+            clearTimeout(this._timer);
+
+            this._timer = setTimeout(() => {
+              localStorage.setItem("playground-editor-width", finalWidth);
+            }, 100);
+
+            this.shadow.$("#editor-container").style.flex =
+              `0 0 ${finalWidth}px`;
+          },
+          mouseup(e) {
+            this.showMask = false;
+          },
+          getFinalWidth(width) {
+            width = parseInt(width);
+            const minWidth = this.ele.clientWidth / 5;
+            const maxWidth = this.ele.clientWidth - minWidth;
+            return Math.max(minWidth, Math.min(maxWidth, width));
+          },
+        },
+        attached() {
+          const previewWidth = localStorage.getItem("playground-editor-width");
+          if (previewWidth) {
+            this.shadow.$("#editor-container").style.flex =
+              `0 0 ${this.getFinalWidth(previewWidth)}px`;
+          }
+        },
+      };
+    };
+  </script>
+</template>

@@ -9,37 +9,6 @@
       overflow: hidden;
     }
 
-    .outer {
-      width: 100%;
-      height: 100%;
-      display: flex;
-    }
-
-    .container {
-      position: relative;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 200px;
-    }
-
-    .container {
-      border-left: 1px solid var(--md-sys-color-primary);
-    }
-
-    @container (max-width: 640px) {
-      .outer {
-        display: block;
-      }
-      .container {
-        border-left: none;
-      }
-    }
-
-    .container:first-child {
-      border-left: none;
-    }
-
     .top-bar {
       display: flex;
       align-items: center;
@@ -181,15 +150,12 @@
       margin-left: 4px;
       font-size: 12px;
     }
-
-    .top-setting-tips {
-    }
   </style>
   <div class="mask" class:hide="isPreviewReady">
     <div class="spinner"></div>
   </div>
-  <div class="outer">
-    <div class="container" style="height: var(--editor-height)">
+  <o-page id="layout-page" src="./playground-layout.html">
+    <div slot="editor">
       <div class="top-bar">
         <div class="tabs">
           <o-fill :value="fileItems">
@@ -240,7 +206,7 @@
           justify-content: center;
           transition: all 0.3s ease-in-out;
           background-color: rgba(
-            from var(--md-sys-color-normal-container) r g b / 0.5
+            from var(--md-sys-color-normal-container) r g b / 0.8
           );
           user-select: none;
         }
@@ -265,10 +231,13 @@
             <input type="checkbox" sync:checked="hideUnimportantFiles" />
             Hide unimportant files
           </label>
+          <div>
+            <button on:click="clearEditorResize">Restore Editor Size</button>
+          </div>
         </div>
       </div>
     </div>
-    <div class="container" style="height: var(--preview-height)">
+    <div slot="preview">
       <div class="top-bar">
         <o-if :value="previewPath">
           <div class="top-btn" on:click="handleReloadClick">
@@ -293,7 +262,7 @@
         </o-else-if>
       </div>
     </div>
-  </div>
+  </o-page>
 
   <o-consumer name="pui" watch:theme="theme"></o-consumer>
 
@@ -368,6 +337,13 @@
           },
         },
         proto: {
+          clearEditorResize() {
+            localStorage.removeItem("playground-editor-width");
+
+            this.shadow
+              .$("#layout-page")
+              .shadow.$("#editor-container").style.flex = "";
+          },
           handleTabClick(tab) {
             if (tab.active) {
               return;
@@ -430,8 +406,7 @@
                   const firstCodeChild = codeEl[0];
 
                   const isComponent =
-                    firstCodeChild &&
-                    firstCodeChild.attr("component") !== null;
+                    firstCodeChild && firstCodeChild.attr("component") !== null;
                   const isPage =
                     firstCodeChild && firstCodeChild.attr("page") !== null;
 
@@ -443,7 +418,8 @@
                     content = `<template component\>${decodeHTMLEntities(firstCodeChild.html)}</template>`;
                   } else if (
                     codeEl.length === 1 &&
-                    firstCodeChild.tag === "template"
+                    (firstCodeChild.tag === "template" ||
+                      firstCodeChild.tag === "pre")
                   ) {
                     // 解套
                     content = decodeHTMLEntities(firstCodeChild.html);
@@ -454,7 +430,12 @@
                   // 获取内容hash
                   const contentHash = await getHash(content);
 
-                  if (!isComponent && !isPage && !!firstCodeChild) {
+                  if (
+                    !isComponent &&
+                    !isPage &&
+                    !!firstCodeChild &&
+                    firstCodeChild.tag === "template"
+                  ) {
                     // 加上样式
                     content =
                       `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" />` +
