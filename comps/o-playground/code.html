@@ -108,12 +108,26 @@
 
         let content = await targetHandle.text();
 
-        content = jsBeautify.html(content, {
-          indent_size: 2,
-          indent_char: " ",
-          eol: "\n",
-          preserve_newlines: false,
-        });
+        if (lang === "javascript") {
+          content = jsBeautify.js(content, {
+            indent_size: 2,
+            indent_char: " ",
+            eol: "\n",
+          });
+        } else if (lang === "css" || lang === "scss" || lang === "less") {
+          content = jsBeautify.css(content, {
+            indent_size: 2,
+            indent_char: " ",
+            eol: "\n",
+          });
+        } else {
+          content = jsBeautify.html(content, {
+            indent_size: 2,
+            indent_char: " ",
+            eol: "\n",
+            preserve_newlines: false,
+          });
+        }
 
         const hasPrefix = content.includes(prefixContent);
 
