@@ -84,11 +84,11 @@
     <div
       class="container"
       id="editor-container"
-      style="height: var(--editor-height)"
+      style="height: var(--editor-height, 200px)"
     >
       <slot name="editor"></slot>
     </div>
-    <div class="container" style="height: var(--preview-height)">
+    <div class="container" style="height: var(--preview-height, 200px)">
       <div class="resize-line" on:mousedown="lineMouseDown"></div>
       <slot name="preview"></slot>
     </div>
