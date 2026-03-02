@@ -6,7 +6,11 @@ o-playground is an interactive code preview component that supports multi-file e
 
 ## Basic Usage
 
+First load the ofa.js base library, then introduce the o-playground component.
+
 ```html
+<script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.mjs" type="module"></script>
+<l-m src="https://playground.ofajs.com/comps/o-playground/o-playground.html"></l-m>
 <o-playground>
   <code path="demo.html">
     <div>Hello World</div>
@@ -60,7 +64,7 @@ Specifies the file path and filename. This is a required attribute.
 Marks this file as a preview file. The component will load this file in the preview area. If not specified, the component will automatically select a non-Page/Component file as the preview file.
 
 ```html
-<code path="app.js" preview>...</code>
+<code path="demo.html" preview>...</code>
 ```
 
 ### `active` (optional)
