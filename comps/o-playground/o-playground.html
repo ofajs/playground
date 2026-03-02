@@ -316,6 +316,7 @@
 
       return {
         tag: "o-playground",
+        attrs: { already: "" },
         data: {
           theme: "",
           fileItems: [],
@@ -524,9 +525,11 @@
               "*",
             );
 
-            const activeFileData = data.files.find(
-              (item) => item.defaultActive,
-            );
+            let activeFileData = data.files.find((item) => item.defaultActive);
+
+            if (!activeFileData) {
+              activeFileData = data.files[0];
+            }
 
             this.activeFilePath = activeFileData.path; // 查看代码的文件路径
 
