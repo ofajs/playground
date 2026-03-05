@@ -88,7 +88,10 @@
     >
       <slot name="editor"></slot>
     </div>
-    <div class="container" style="height: var(--preview-height, 200px)">
+    <div
+      class="container"
+      style="height: var(--preview-height, var(--editor-height, 200px))"
+    >
       <div class="resize-line" on:mousedown="lineMouseDown"></div>
       <slot name="preview"></slot>
     </div>
