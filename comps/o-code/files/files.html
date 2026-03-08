@@ -28,7 +28,12 @@
       <p-list slot="childs" style="--ladder-left: 8px">
         <o-fill :value="files">
           <p-list-item button>
-            <handle-icon slot="prefix" :path="$data.name" :kind="$data.kind"></handle-icon>
+            <handle-icon
+              slot="prefix"
+              :path="$data.path"
+              :kind="$data.kind"
+              :expanded="$data.expanded"
+            ></handle-icon>
             {{$data.name}}</p-list-item
           >
         </o-fill>
