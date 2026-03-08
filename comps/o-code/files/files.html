@@ -26,7 +26,7 @@
         ></n-icon>
       </p-button>
       <p-list slot="childs" style="--ladder-left: 8px">
-        <o-fill :value="files" name="handle-item"> </o-fill>
+        <o-fill :value="files" name="handle-item" fill-name="path"> </o-fill>
       </p-list>
     </p-list-item>
   </p-list>
@@ -34,8 +34,9 @@
   <template name="handle-item">
     <p-list-item
       button
-      attr:active-item="$host.isActive($data)"
+      attr:active-item="$host.activePath === $data.path"
       on:click="$host.clickItem($data)"
+      attr:collapse-childs="$data.expanded ? 'open' : 'close'"
     >
       <handle-icon
         slot="prefix"
@@ -44,8 +45,14 @@
         :expanded="$data.expanded"
       ></handle-icon>
       {{$data.name}}
+
+      <x-if :value="$data.files && $data.files.length > 0">
+        <i toggle-collapse triangle slot="suffix"></i>
+      </x-if>
+
       <p-list slot="childs">
-        <o-fill :value="$data.files" name="handle-item"> </o-fill>
+        <o-fill :value="$data.files" name="handle-item" fill-name="path">
+        </o-fill>
       </p-list>
     </p-list-item>
   </template>
@@ -83,13 +90,12 @@
           },
         },
         proto: {
-          isActive(item) {
-            if (item.kind === "dir") {
-              return false;
-            }
-            return this.activePath === item.path;
-          },
           clickItem(item) {
+            if (item.kind === "dir") {
+              item.expanded = !item.expanded;
+              return;
+            }
+
             this.activePath = item.path;
 
             const provider = this.getProvider("oCode-config");
@@ -106,11 +112,17 @@
                   continue;
                 }
 
-                target.files.push({
+                const obj = {
                   path: item.path,
                   kind: item.kind,
                   name: item.name,
-                });
+                };
+
+                if (item.kind === "dir") {
+                  obj.expanded = false;
+                }
+
+                target.files.push(obj);
 
                 if (item.kind === "dir") {
                   // 读取目录下的文件和子目录
