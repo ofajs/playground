@@ -90,10 +90,21 @@
           },
         },
         proto: {
+          saveExpandedState(item) {
+            const key = `files-expanded-${this.projectPath}`;
+            const state = JSON.parse(sessionStorage.getItem(key) || "{}");
+            state[item.path] = item.expanded;
+            sessionStorage.setItem(key, JSON.stringify(state));
+          },
+          getExpandedState(path) {
+            const key = `files-expanded-${this.projectPath}`;
+            const state = JSON.parse(sessionStorage.getItem(key) || "{}");
+            return state[path] || false;
+          },
           clickItem(item) {
             if (item.kind === "dir") {
               item.expanded = !item.expanded;
-              return;
+              this.saveExpandedState(item);
             }
 
             this.activePath = item.path;
@@ -119,7 +130,7 @@
                 };
 
                 if (item.kind === "dir") {
-                  obj.expanded = false;
+                  obj.expanded = this.getExpandedState(item.path);
                 }
 
                 target.files.push(obj);
