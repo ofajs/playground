@@ -11,14 +11,15 @@
       return {
         tag: "handle-icon",
         attr: {
-          path: null,
+          path: null, // 文件路径
+          kind: null, // 文件类型，目录或文件
+          expanded: false, // 是否展开子项，只针对目录
         },
         data: {
           icon: "vscode-icons:default-file",
-          item: null,
         },
         watch: {
-          ["path,item"]() {
+          ["path,kind,expanded"]() {
             this.icon = this.getIcon();
           },
         },
@@ -174,21 +175,19 @@
               case "webm":
                 return "vscode-icons:file-type-video";
               default:
-                if (this.item) {
-                  const item = this.item;
+                const name = this.path.split("/").pop();
 
-                  if (item.kind === "dir") {
-                    return item.expanded
-                      ? "vscode-icons:default-folder-opened"
-                      : "vscode-icons:default-folder";
-                  }
+                if (this.kind === "dir") {
+                  return this.expanded
+                    ? "vscode-icons:default-folder-opened"
+                    : "vscode-icons:default-folder";
+                }
 
-                  if (item.name === "LICENSE") {
-                    return "vscode-icons:file-type-license";
-                  }
-                  if (item.name === "Makefile") {
-                    return "vscode-icons:file-type-makefile";
-                  }
+                if (name === "LICENSE") {
+                  return "vscode-icons:file-type-license";
+                }
+                if (name === "Makefile") {
+                  return "vscode-icons:file-type-makefile";
                 }
 
                 return "vscode-icons:default-file";

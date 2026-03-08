@@ -28,17 +28,26 @@
       <p-list slot="childs" style="--ladder-left: 8px">
         <o-fill :value="files">
           <p-list-item button>
-            <handle-icon slot="prefix" :path="$data.name"></handle-icon>
+            <handle-icon slot="prefix" :path="$data.name" :kind="$data.kind"></handle-icon>
             {{$data.name}}</p-list-item
           >
         </o-fill>
       </p-list>
     </p-list-item>
   </p-list>
+  <o-consumer
+    name="oCode-config"
+    watch:active-path="activePath"
+    watch:project-handle-path="projectPath"
+  ></o-consumer>
   <script>
     export default async ({ load }) => {
+      const { get } = await load("/nos/fs/main.js");
+
       return {
         data: {
+          activePath: "", // 激活路径
+          projectPath: "", // 项目地址
           files: [
             {
               name: "App.jsx",
@@ -50,6 +59,31 @@
             },
           ],
         },
+        watch: {
+          projectPath(path) {
+            if (!path) {
+              return;
+            }
+
+            this.loadProjectFiles(path);
+          },
+        },
+        proto: {
+          async loadProjectFiles(path) {
+            this.files = [];
+
+            const handle = await get(path);
+
+            for await (let item of handle.values()) {
+              this.files.push({
+                path: item.path,
+                kind: item.kind,
+                name: item.name,
+              });
+            }
+          },
+        },
+        attached() {},
       };
     };
   </script>
