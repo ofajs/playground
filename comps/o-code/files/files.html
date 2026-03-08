@@ -1,0 +1,56 @@
+<template page>
+  <l-m src="/gh/ofajs/Punch-UI/packages/list/list.html"></l-m>
+  <l-m src="/gh/ofajs/Punch-UI/packages/button/button.html"></l-m>
+  <l-m src="/nos/n-icon/n-icon.html"></l-m>
+  <l-m src="./handle-icon.html"></l-m>
+  <style>
+    :host {
+      display: flex;
+    }
+    .main-list {
+      box-sizing: border-box;
+      padding: 6px;
+      width: 100%;
+    }
+    p-list-item {
+      border-radius: 6px;
+    }
+  </style>
+  <p-list class="main-list">
+    <p-list-item>
+      <b style="font-size: 12px">FILES</b>
+      <p-button size="mini" slot="suffix" icon variant="text">
+        <n-icon
+          icon="material-symbols:add-rounded"
+          style="font-size: 18px"
+        ></n-icon>
+      </p-button>
+      <p-list slot="childs" style="--ladder-left: 8px">
+        <o-fill :value="files">
+          <p-list-item button>
+            <handle-icon slot="prefix" :path="$data.name"></handle-icon>
+            {{$data.name}}</p-list-item
+          >
+        </o-fill>
+      </p-list>
+    </p-list-item>
+  </p-list>
+  <script>
+    export default async ({ load }) => {
+      return {
+        data: {
+          files: [
+            {
+              name: "App.jsx",
+              kind: "file",
+            },
+            {
+              name: "index.html",
+              kind: "file",
+            },
+          ],
+        },
+      };
+    };
+  </script>
+</template>

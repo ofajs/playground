@@ -1,0 +1,31 @@
+<template page>
+  <style>
+    :host {
+      display: flex;
+      height: 40px;
+    }
+    .logo {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 40px;
+      padding-left: 16px;
+    }
+    .logo-text {
+      margin-left: 4px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  </style>
+  <div class="logo">
+    <img src="./logo.svg" style="height: 24px" alt="logo" />
+    <div class="logo-text">OFA Playground</div>
+  </div>
+  <script>
+    export default async ({ load }) => {
+      return {
+        data: {},
+      };
+    };
+  </script>
+</template>
