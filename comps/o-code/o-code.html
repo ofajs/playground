@@ -47,7 +47,7 @@
   </style>
   <o-provider
     name="oCode-config"
-    :active-path="activePath"
+    sync:active-path="activePath"
     :project-handle-path="path"
   >
     <div class="container">
@@ -72,7 +72,12 @@
           path: null, // 项目地址
         },
         data: {
-          activePath: "", // 激活路径
+          activePath: sessionStorage.getItem("activePath") || "", // 激活路径
+        },
+        watch: {
+          activePath(activePath) {
+            sessionStorage.setItem("activePath", activePath);
+          },
         },
       };
     };
