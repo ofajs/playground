@@ -26,20 +26,29 @@
         ></n-icon>
       </p-button>
       <p-list slot="childs" style="--ladder-left: 8px">
-        <o-fill :value="files">
-          <p-list-item button>
-            <handle-icon
-              slot="prefix"
-              :path="$data.path"
-              :kind="$data.kind"
-              :expanded="$data.expanded"
-            ></handle-icon>
-            {{$data.name}}</p-list-item
-          >
-        </o-fill>
+        <o-fill :value="files" name="handle-item"> </o-fill>
       </p-list>
     </p-list-item>
   </p-list>
+
+  <template name="handle-item">
+    <p-list-item
+      button
+      attr:active-item="$host.isActive($data)"
+      on:click="$host.clickItem($data)"
+    >
+      <handle-icon
+        slot="prefix"
+        :path="$data.path"
+        :kind="$data.kind"
+        :expanded="$data.expanded"
+      ></handle-icon>
+      {{$data.name}}
+      <p-list slot="childs">
+        <o-fill :value="$data.files" name="handle-item"> </o-fill>
+      </p-list>
+    </p-list-item>
+  </template>
   <o-consumer
     name="oCode-config"
     watch:active-path="activePath"
@@ -74,18 +83,46 @@
           },
         },
         proto: {
-          async loadProjectFiles(path) {
-            this.files = [];
-
-            const handle = await get(path);
-
-            for await (let item of handle.values()) {
-              this.files.push({
-                path: item.path,
-                kind: item.kind,
-                name: item.name,
-              });
+          isActive(item) {
+            if (item.kind === "dir") {
+              return false;
             }
+            return this.activePath === item.path;
+          },
+          clickItem(item) {
+            this.activePath = item.path;
+
+            const provider = this.getProvider("oCode-config");
+            provider.activePath = item.path;
+          },
+          async loadProjectFiles(path) {
+            const loadFiles = async (target, path) => {
+              const handle = await get(path);
+
+              target.files = [];
+
+              for await (let item of handle.values()) {
+                if (item.name === "node_modules") {
+                  continue;
+                }
+
+                target.files.push({
+                  path: item.path,
+                  kind: item.kind,
+                  name: item.name,
+                });
+
+                if (item.kind === "dir") {
+                  // 读取目录下的文件和子目录
+                  loadFiles(
+                    target.files.find((e) => e.path === item.path),
+                    item.path,
+                  );
+                }
+              }
+            };
+
+            loadFiles(this, path);
           },
         },
         attached() {},
