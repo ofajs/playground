@@ -175,6 +175,9 @@
               case "webm":
                 return "vscode-icons:file-type-video";
               default:
+                if (!this.path) {
+                  return "vscode-icons:default-file";
+                }
                 const name = this.path.split("/").pop();
 
                 if (this.kind === "dir") {

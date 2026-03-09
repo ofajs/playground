@@ -9,6 +9,7 @@
   </style>
   <monaco-editor
     plugins="prettier"
+    on:initialized="initOK"
     style="height: 100%; width: 100%"
   ></monaco-editor>
   <o-consumer name="oCode-config" watch:active-path="activePath"></o-consumer>
@@ -29,6 +30,8 @@
             const handle = await get(path);
             const content = await handle.text();
 
+            await this._initok;
+
             // if (this.path !== path) {
             //   return;
             // }
@@ -46,8 +49,26 @@
             this._editor.setLanguage(language);
           },
         },
+        proto: {
+          initOK() {
+            if (this._init_resolve) {
+              this._init_resolve();
+              this._init_resolve = null;
+            }
+          },
+        },
         ready() {
+          this._initok = new Promise(
+            (resolve) => (this._init_resolve = resolve),
+          );
+
           this._editor = this.shadow.$("monaco-editor");
+
+          if (this._editor._initialized) {
+            this._editor._initialized.then(() => {
+              this._init_resolve();
+            });
+          }
         },
       };
     };
