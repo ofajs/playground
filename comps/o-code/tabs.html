@@ -1,8 +1,13 @@
 <template page>
   <style>
     :host {
-      box-sizing: border-box;
       display: block;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      box-sizing: border-box;
       height: 40px;
       background-color: #1e1e1e;
       --tab-border-color: rgba(from var(--md-sys-color-normal) r g b / 0.3);
@@ -48,11 +53,6 @@
     .item.active:before {
       height: 2px;
       background-color: var(--md-sys-color-normal);
-    }
-
-    .container {
-      display: flex;
-      flex-wrap: wrap;
     }
   </style>
   <div class="container">

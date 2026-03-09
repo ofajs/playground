@@ -121,6 +121,10 @@
           dblclickItem(item, event) {
             event.stopPropagation();
 
+            if (item.kind === "dir") {
+              return;
+            }
+
             const provider = this.getProvider("o-code");
             provider.dispatch("dblclick-item", {
               data: {
