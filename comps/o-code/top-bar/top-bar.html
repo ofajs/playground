@@ -2,7 +2,9 @@
   <style>
     :host {
       display: flex;
+      width: 100%;
       height: 40px;
+      align-items: center;
     }
     .logo {
       display: flex;
@@ -21,6 +23,17 @@
     <img src="./logo.svg" style="height: 24px" alt="logo" />
     <div class="logo-text">OFA Playground</div>
   </div>
+  <p-button icon variant="text" size="small" style="margin-left: 64px">
+    <n-icon icon="boxicons:sidebar"></n-icon>
+  </p-button>
+  <p-button variant="text" size="small" style="margin-left: 4px">
+    <n-icon icon="material-symbols:preview" slot="prefix"></n-icon>
+    Preview
+  </p-button>
+  <p-button size="small" style="margin-left: auto; margin-right: 16px">
+    <n-icon icon="ic:twotone-share" slot="prefix"></n-icon>
+    Publish
+  </p-button>
   <script>
     export default async ({ load }) => {
       return {
