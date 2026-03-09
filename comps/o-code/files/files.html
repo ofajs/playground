@@ -35,6 +35,7 @@
     <p-list-item
       button
       attr:active-item="$host.activePath === $data.path"
+      on:dblclick="$host.dblclickItem($data,$event)"
       on:click="$host.clickItem($data)"
       attr:collapse-childs="$data.expanded ? 'open' : 'close'"
     >
@@ -110,6 +111,22 @@
 
             const provider = this.getProvider("o-code");
             provider.activePath = item.path;
+
+            provider.dispatch("click-item", {
+              data: {
+                path: item.path,
+              },
+            });
+          },
+          dblclickItem(item, event) {
+            event.stopPropagation();
+
+            const provider = this.getProvider("o-code");
+            provider.dispatch("dblclick-item", {
+              data: {
+                path: item.path,
+              },
+            });
           },
           async loadProjectFiles(path) {
             const loadFiles = async (target, path) => {

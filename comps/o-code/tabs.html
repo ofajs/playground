@@ -20,10 +20,12 @@
         },
         proto: {
           clickItem(e) {
-            console.log("clickItem: ", e);
+            const { path } = e.data;
+            console.log("clickItem: ", path);
           },
           dblclickItem(e) {
-            console.log("dblclickItem: ", e);
+            const { path } = e.data;
+            console.log("dblclickItem: ", path);
           },
         },
       };
