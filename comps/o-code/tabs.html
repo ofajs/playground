@@ -5,7 +5,7 @@
       display: block;
       height: 40px;
       background-color: #1e1e1e;
-      --tab-border-color: rgba(from var(--md-sys-color-normal) r g b / 0.2);
+      --tab-border-color: rgba(from var(--md-sys-color-normal) r g b / 0.3);
       border-bottom: 1px solid var(--tab-border-color);
     }
 
@@ -41,6 +41,10 @@
       border-bottom: 1px solid #1e1e1e;
     }
 
+    .item.parttime {
+      font-style: italic;
+    }
+
     .item.active:before {
       height: 2px;
       background-color: var(--md-sys-color-normal);
@@ -51,16 +55,11 @@
       flex-wrap: wrap;
     }
   </style>
-  <o-consumer
-    name="o-code"
-    watch:active-path="activePath"
-    on:click-item="clickItem"
-    on:dblclick-item="dblclickItem"
-  ></o-consumer>
   <div class="container">
     <o-fill :value="tabs">
       <div
         class="item"
+        class:parttime="$data.parttime"
         on:click="$host.clickTab($data)"
         class:active="$host.activePath === $data.path"
       >
@@ -76,16 +75,24 @@
       </div>
     </o-fill>
   </div>
+
+  <o-consumer
+    name="o-code"
+    watch:active-path="activePath"
+    :project-handle-path="projectPath"
+    on:click-item="clickItem"
+    on:dblclick-item="dblclickItem"
+  ></o-consumer>
   <script>
     export default async () => {
       return {
         data: {
           activePath: "",
+          projectPath: "",
           tabs: [],
         },
         proto: {
           clickTab(tab) {
-            // this.activePath = tab.path;
             const provider = this.getProvider("o-code");
             provider.activePath = tab.path;
           },
@@ -97,16 +104,39 @@
             const { path } = e.data;
             console.log("clickItem: ", path);
 
-            if (!this.tabs.some((tab) => tab.path === path)) {
-              this.tabs.push({
-                path,
-                name: path.split("/").pop(),
-              });
+            if (this.tabs.some((tab) => tab.path === path)) {
+              // 已存在，则直接切换过去
+              return;
             }
+
+            const partTimeTabIndex = this.tabs.findIndex((tab) => tab.parttime);
+
+            if (partTimeTabIndex > -1) {
+              // 去除兼职模式的tab
+              this.tabs.splice(partTimeTabIndex, 1);
+            }
+
+            this.tabs.push({
+              path,
+              name: path.split("/").pop(),
+              parttime: true,
+            });
           },
           dblclickItem(e) {
             const { path } = e.data;
             console.log("dblclickItem: ", path);
+
+            const existingTab = this.tabs.find((tab) => tab.path === path);
+
+            if (existingTab) {
+              existingTab.parttime = false;
+            } else {
+              this.tabs.push({
+                path,
+                name: path.split("/").pop(),
+                parttime: false,
+              });
+            }
           },
         },
       };
