@@ -41,7 +41,7 @@
       border-bottom: 1px solid #1e1e1e;
     }
 
-    .item.parttime {
+    .item.italic {
       font-style: italic;
     }
 
@@ -59,7 +59,7 @@
     <o-fill :value="tabs">
       <div
         class="item"
-        class:parttime="$data.parttime"
+        class:italic="$data.italic"
         on:click="$host.clickTab($data)"
         class:active="$host.activePath === $data.path"
       >
@@ -105,21 +105,19 @@
             console.log("clickItem: ", path);
 
             if (this.tabs.some((tab) => tab.path === path)) {
-              // 已存在，则直接切换过去
               return;
             }
 
-            const partTimeTabIndex = this.tabs.findIndex((tab) => tab.parttime);
+            const italicTabIndex = this.tabs.findIndex((tab) => tab.italic);
 
-            if (partTimeTabIndex > -1) {
-              // 去除兼职模式的tab
-              this.tabs.splice(partTimeTabIndex, 1);
+            if (italicTabIndex > -1) {
+              this.tabs.splice(italicTabIndex, 1);
             }
 
             this.tabs.push({
               path,
               name: path.split("/").pop(),
-              parttime: true,
+              italic: true,
             });
           },
           dblclickItem(e) {
@@ -129,12 +127,12 @@
             const existingTab = this.tabs.find((tab) => tab.path === path);
 
             if (existingTab) {
-              existingTab.parttime = false;
+              existingTab.italic = false;
             } else {
               this.tabs.push({
                 path,
                 name: path.split("/").pop(),
-                parttime: false,
+                italic: false,
               });
             }
           },
