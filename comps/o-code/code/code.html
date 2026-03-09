@@ -12,7 +12,7 @@
     on:initialized="initOK"
     style="height: 100%; width: 100%"
   ></monaco-editor>
-  <o-consumer name="oCode-config" watch:active-path="activePath"></o-consumer>
+  <o-consumer name="o-code" watch:active-path="activePath"></o-consumer>
   <script>
     export default async ({ load }) => {
       const { get } = await load("/nos/fs/main.js");

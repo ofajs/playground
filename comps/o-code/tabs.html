@@ -1,0 +1,32 @@
+<template page>
+  <style>
+    :host {
+      display: block;
+      height: 40px;
+      background-color: #1e1e1e;
+    }
+  </style>
+  <o-consumer
+    name="o-code"
+    watch:active-path="activePath"
+    on:click-item="clickItem"
+    on:dblclick-item="dblclickItem"
+  ></o-consumer>
+  <script>
+    export default async () => {
+      return {
+        data: {
+          activePath: "",
+        },
+        proto: {
+          clickItem(e) {
+            console.log("clickItem: ", e);
+          },
+          dblclickItem(e) {
+            console.log("dblclickItem: ", e);
+          },
+        },
+      };
+    };
+  </script>
+</template>

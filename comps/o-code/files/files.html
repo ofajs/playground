@@ -57,7 +57,7 @@
     </p-list-item>
   </template>
   <o-consumer
-    name="oCode-config"
+    name="o-code"
     watch:active-path="activePath"
     watch:project-handle-path="projectPath"
   ></o-consumer>
@@ -108,9 +108,7 @@
               return;
             }
 
-            this.activePath = item.path;
-
-            const provider = this.getProvider("oCode-config");
+            const provider = this.getProvider("o-code");
             provider.activePath = item.path;
           },
           async loadProjectFiles(path) {
