@@ -105,6 +105,7 @@
             if (item.kind === "dir") {
               item.expanded = !item.expanded;
               this.saveExpandedState(item);
+              return;
             }
 
             this.activePath = item.path;

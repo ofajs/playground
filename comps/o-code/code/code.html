@@ -1,0 +1,55 @@
+<template page>
+  <l-m src="../../../comps/monaco-editor/monaco-editor.html"></l-m>
+  <style>
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <monaco-editor
+    plugins="prettier"
+    style="height: 100%; width: 100%"
+  ></monaco-editor>
+  <o-consumer name="oCode-config" watch:active-path="activePath"></o-consumer>
+  <script>
+    export default async ({ load }) => {
+      const { get } = await load("/nos/fs/main.js");
+
+      return {
+        data: {
+          activePath: "", // 激活路径
+        },
+        watch: {
+          async activePath(path) {
+            if (!path) {
+              return;
+            }
+
+            const handle = await get(path);
+            const content = await handle.text();
+
+            // if (this.path !== path) {
+            //   return;
+            // }
+
+            this._editor.setValue(content);
+
+            // 根据后缀设置语言
+            const fileName = handle.name;
+            let language = fileName.split(".").pop();
+
+            if (language === "js" || language === "mjs") {
+              language = "javascript";
+            }
+
+            this._editor.setLanguage(language);
+          },
+        },
+        ready() {
+          this._editor = this.shadow.$("monaco-editor");
+        },
+      };
+    };
+  </script>
+</template>
