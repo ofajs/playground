@@ -89,7 +89,24 @@
         data: {
           activePath: "",
           projectPath: "",
-          tabs: [],
+          tabs:
+            JSON.parse(
+              localStorage.getItem(
+                "tabs_" + (localStorage.getItem("currentProjectPath") || ""),
+              ),
+            ) || [],
+        },
+        watch: {
+          tabs() {
+            localStorage.setItem(
+              "tabs_" + this.projectPath,
+              JSON.stringify(this.tabs),
+            );
+          },
+          projectPath(path) {
+            localStorage.setItem("currentProjectPath", path);
+            this.tabs = JSON.parse(localStorage.getItem("tabs_" + path)) || [];
+          },
         },
         proto: {
           clickTab(tab) {
