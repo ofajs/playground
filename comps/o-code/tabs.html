@@ -115,7 +115,21 @@
           },
           closeTab(index, e) {
             e.stopPropagation();
+            const tab = this.tabs[index];
             this.tabs.splice(index, 1);
+
+            const provider = this.getProvider("o-code");
+
+            // 如果关闭的是当前激活的tab，且还有其他tab，切换到前一个或后一个tab
+            if (this.activePath === tab.path && this.tabs.length > 0) {
+              if (this.tabs[index]) {
+                provider.activePath = this.tabs[index].path;
+              } else if (this.tabs[index - 1]) {
+                provider.activePath = this.tabs[index - 1].path;
+              } else {
+                provider.activePath = this.tabs[0].path;
+              }
+            }
           },
           clickItem(e) {
             const { path } = e.data;
