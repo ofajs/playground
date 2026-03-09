@@ -128,12 +128,22 @@
           },
           resizeMove(event) {
             const diffX = event.clientX - this._startX;
-            this.shadow.$(".left").style.width =
-              `${this._startWidth + diffX}px`;
+            const finalWidth = this._startWidth + diffX;
+            this.shadow.$(".left").style.width = `${finalWidth}px`;
+            clearTimeout(this._resizeTimeout);
+            this._resizeTimeout = setTimeout(() => {
+              localStorage.playgroundCodeWidth = finalWidth;
+            }, 300);
           },
           resizeEnd(event) {
             this.showResizeMask = false;
           },
+        },
+        attached() {
+          if (localStorage.playgroundCodeWidth) {
+            this.shadow.$(".left").style.width =
+              `${localStorage.playgroundCodeWidth}px`;
+          }
         },
       };
     };
