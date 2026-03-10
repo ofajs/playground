@@ -41,22 +41,22 @@
     .article {
       display: flex;
       flex: 1;
+      border-left: 1px solid gray;
+      border-top: 1px solid gray;
+      border-radius: 6px;
+      overflow: hidden;
     }
 
     .code-area {
       display: flex;
       flex-direction: column;
-      border-left: 1px solid gray;
-      border-top: 1px solid gray;
-      border-radius: 6px;
       flex: 2;
       background-color: var(--md-sys-color-surface);
-      overflow: hidden;
     }
 
     .preview-area {
       position: relative;
-      flex: 1;
+      flex: 0 0 calc(50vw - 400px);
     }
 
     .code-top {
@@ -73,6 +73,9 @@
       z-index: 21;
     }
 
+    .resize-line:hover {
+      background-color: var(--md-sys-color-primary);
+    }
     .resize-mask {
       position: absolute;
       left: 0;
@@ -131,6 +134,12 @@
           <div class="preview-area">
             <div class="overflow-inner">
               <o-page src="./preview/preview.html"></o-page>
+              <div
+                class="resize-line"
+                class:hide="showResizeMask"
+                on:mousedown="resizeStartPreview"
+                style="left: 0; right: auto"
+              ></div>
             </div>
           </div>
         </div>
@@ -148,6 +157,7 @@
           showSidebar: true,
           showResizeMask: false,
           activePath: sessionStorage.getItem("activePath") || "", // 激活路径
+          resizeType: null, // 'sidebar' | 'preview' | null
         },
         watch: {
           activePath(activePath) {
@@ -156,24 +166,45 @@
         },
         proto: {
           resizeStart(event) {
+            this.resizeType = "sidebar";
             this.showResizeMask = true;
 
             this._startX = event.clientX;
             this._startWidth = parseInt(this.shadow.$(".left").css.width);
           },
+          resizeStartPreview(event) {
+            this.resizeType = "preview";
+            this.showResizeMask = true;
+
+            this._startX = event.clientX;
+            this._startWidth = parseInt(
+              this.shadow.$(".preview-area").css.width,
+            );
+          },
           resizeMove(event) {
-            const diffX = event.clientX - this._startX;
-            const finalWidth = this._startWidth + diffX;
-            this.shadow.$(".left").style.width = `${finalWidth}px`;
-            this.shadow.$(".left .overflow-inner").style.width =
-              `${finalWidth}px`;
-            clearTimeout(this._resizeTimeout);
-            this._resizeTimeout = setTimeout(() => {
-              localStorage.playgroundCodeWidth = finalWidth;
-            }, 300);
+            if (this.resizeType === "sidebar") {
+              const diffX = event.clientX - this._startX;
+              const finalWidth = this._startWidth + diffX;
+              this.shadow.$(".left").style.width = `${finalWidth}px`;
+              this.shadow.$(".left .overflow-inner").style.width =
+                `${finalWidth}px`;
+              clearTimeout(this._resizeTimeout);
+              this._resizeTimeout = setTimeout(() => {
+                localStorage.playgroundCodeWidth = finalWidth;
+              }, 300);
+            } else if (this.resizeType === "preview") {
+              const diffX = event.clientX - this._startX;
+              const finalWidth = this._startWidth - diffX;
+              this.shadow.$(".preview-area").style.flex = `0 0 ${finalWidth}px`;
+              clearTimeout(this._resizeTimeout);
+              this._resizeTimeout = setTimeout(() => {
+                localStorage.playgroundPreviewWidth = finalWidth;
+              }, 300);
+            }
           },
           resizeEnd(event) {
             this.showResizeMask = false;
+            this.resizeType = null;
           },
         },
         attached() {
@@ -182,6 +213,10 @@
               `${localStorage.playgroundCodeWidth}px`;
             this.shadow.$(".left .overflow-inner").style.width =
               `${localStorage.playgroundCodeWidth}px`;
+          }
+          if (localStorage.playgroundPreviewWidth) {
+            this.shadow.$(".preview-area").style.flex =
+              `0 0 ${localStorage.playgroundPreviewWidth}px`;
           }
         },
       };
