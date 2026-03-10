@@ -32,7 +32,12 @@
   >
     <n-icon icon="boxicons:sidebar"></n-icon>
   </p-button>
-  <p-button variant="text" size="small" style="margin-left: 4px">
+  <p-button
+    variant="text"
+    on:click="clickPreviewBtn"
+    size="small"
+    style="margin-left: 4px"
+  >
     <n-icon icon="material-symbols:preview" slot="prefix"></n-icon>
     预览
   </p-button>
@@ -55,6 +60,10 @@
       return {
         data: {},
         proto: {
+          clickPreviewBtn() {
+            const provider = this.getProvider("o-code");
+            provider.emit("click-preview-btn");
+          },
           clickSidebarBtn() {
             const provider = this.getProvider("o-code");
             provider.emit("click-sidebar-btn");

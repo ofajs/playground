@@ -107,6 +107,7 @@
     sync:active-path="activePath"
     :project-handle-path="path"
     on:click-sidebar-btn="showSidebar = !showSidebar"
+    on:click-preview-btn="showPreview = !showPreview"
   >
     <o-page src="./menu.html"></o-page>
     <div class="container">
@@ -131,17 +132,19 @@
             </div>
             <o-page src="./code/code.html"></o-page>
           </div>
-          <div class="preview-area">
-            <div class="overflow-inner">
-              <o-page src="./preview/preview.html"></o-page>
-              <div
-                class="resize-line"
-                class:hide="showResizeMask"
-                on:mousedown="resizeStartPreview"
-                style="left: 0; right: auto"
-              ></div>
+          <o-if :value="showPreview">
+            <div class="preview-area">
+              <div class="overflow-inner">
+                <o-page src="./preview/preview.html"></o-page>
+                <div
+                  class="resize-line"
+                  class:hide="showResizeMask"
+                  on:mousedown="resizeStartPreview"
+                  style="left: 0; right: auto"
+                ></div>
+              </div>
             </div>
-          </div>
+          </o-if>
         </div>
       </div>
     </div>
@@ -155,6 +158,8 @@
         },
         data: {
           showSidebar: true,
+          showPreview:
+            sessionStorage.getItem("showPreview") === "true" || false,
           showResizeMask: false,
           activePath: sessionStorage.getItem("activePath") || "", // 激活路径
           resizeType: null, // 'sidebar' | 'preview' | null
@@ -162,6 +167,9 @@
         watch: {
           activePath(activePath) {
             sessionStorage.setItem("activePath", activePath);
+          },
+          showPreview(showPreview) {
+            sessionStorage.setItem("showPreview", showPreview);
           },
         },
         proto: {
