@@ -18,7 +18,7 @@
   </style>
   <p-list class="main-list">
     <p-list-item>
-      <b style="font-size: 12px">FILES</b>
+      <b style="font-size: 12px">文件</b>
       <p-button size="mini" slot="suffix" icon variant="text">
         <n-icon
           icon="material-symbols:add-rounded"
@@ -37,6 +37,7 @@
       attr:active-item="$host.activePath === $data.path"
       on:dblclick="$host.dblclickItem($data,$event)"
       on:click="$host.clickItem($data)"
+      on:contextmenu="$host.openFileMenu($data,$event)"
       attr:collapse-childs="$data.expanded ? 'open' : 'close'"
     >
       <handle-icon
@@ -91,6 +92,25 @@
           },
         },
         proto: {
+          openFileMenu(item, event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const provider = this.getProvider("o-code");
+
+            provider.dispatch("open-file-menu", {
+              data: {
+                path: item.path,
+                kind: item.kind,
+                clientX: event.clientX,
+                clientY: event.clientY,
+                screenX: event.screenX,
+                screenY: event.screenY,
+                originItem: item,
+                originEvent: event,
+              },
+            });
+          },
           saveExpandedState(item) {
             const key = `files-expanded-${this.projectPath}`;
             const state = JSON.parse(sessionStorage.getItem(key) || "{}");

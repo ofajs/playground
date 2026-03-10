@@ -1,0 +1,94 @@
+<template page>
+  <l-m src="/gh/ofajs/Punch-UI/packages/menu/menu.html"></l-m>
+  <style>
+    :host {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 30;
+      pointer-events: none;
+    }
+
+    .main-menu {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: auto;
+      z-index: 32;
+    }
+
+    .mask {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 31;
+      pointer-events: auto;
+    }
+    .hide {
+      display: none;
+    }
+    p-menu-item n-icon {
+      color: var(--md-sys-color-primary);
+    }
+  </style>
+  <div class="mask" on:click="openMenu = false" class:hide="!openMenu"></div>
+  <!-- 专门用于处理菜单的 -->
+  <o-consumer name="o-code" on:open-file-menu="openFileMenu"></o-consumer>
+  <p-menu class="main-menu" attr:open="openMenu ? 'on' : 'off'">
+    <p-menu-item>
+      <n-icon icon="lets-icons:view" slot="prefix"></n-icon>
+      预览
+    </p-menu-item>
+    <hr />
+    <p-menu-item>
+      <n-icon icon="iconamoon:file-add" slot="prefix"></n-icon>
+      创建文件
+    </p-menu-item>
+    <p-menu-item>
+      <n-icon
+        icon="material-symbols:create-new-folder-outline"
+        slot="prefix"
+      ></n-icon>
+      创建目录
+    </p-menu-item>
+    <hr />
+    <p-menu-item>
+      <n-icon icon="boxicons:cut" slot="prefix"></n-icon>
+      剪切
+    </p-menu-item>
+    <p-menu-item>
+      <n-icon icon="boxicons:copy" slot="prefix"></n-icon>
+      复制
+    </p-menu-item>
+    <p-menu-item>
+      <n-icon icon="boxicons:paste" slot="prefix"></n-icon>
+      粘贴
+    </p-menu-item>
+  </p-menu>
+  <script>
+    export default async ({ load }) => {
+      return {
+        data: {
+          openMenu: false,
+        },
+        proto: {
+          openFileMenu(e) {
+            const { path, kind, clientX, clientY } = e.data;
+
+            const menu = this.shadow.$(".main-menu");
+
+            this.openMenu = true;
+
+            menu.style.left = `${clientX}px`;
+            menu.style.top = `${clientY}px`;
+          },
+        },
+      };
+    };
+  </script>
+</template>

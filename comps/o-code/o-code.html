@@ -71,6 +71,7 @@
       height: 100%;
       /* background-color: rgba(0, 0, 0, 0.5); */
       z-index: 10;
+      cursor: ew-resize;
     }
     .hide {
       display: none;
@@ -94,6 +95,7 @@
     :project-handle-path="path"
     on:click-sidebar-btn="showSidebar = !showSidebar"
   >
+    <o-page src="./menu.html"></o-page>
     <div class="container">
       <div class="top">
         <o-page src="./top-bar/top-bar.html"></o-page>
