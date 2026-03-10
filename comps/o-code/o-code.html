@@ -132,19 +132,17 @@
             </div>
             <o-page src="./code/code.html"></o-page>
           </div>
-          <o-if :value="showPreview">
-            <div class="preview-area">
-              <div class="overflow-inner">
-                <o-page src="./preview/preview.html"></o-page>
-                <div
-                  class="resize-line"
-                  class:hide="showResizeMask"
-                  on:mousedown="resizeStartPreview"
-                  style="left: 0; right: auto"
-                ></div>
-              </div>
+          <div class="preview-area" class:hide="!showPreview">
+            <div class="overflow-inner">
+              <o-page src="./preview/preview.html"></o-page>
+              <div
+                class="resize-line"
+                class:hide="showResizeMask"
+                on:mousedown="resizeStartPreview"
+                style="left: 0; right: auto"
+              ></div>
             </div>
-          </o-if>
+          </div>
         </div>
       </div>
     </div>
