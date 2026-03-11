@@ -143,9 +143,11 @@
 
             // 出发刷新列表
             const provider = this.getProvider("o-code");
+
             provider.dispatch("refresh-list", {
               data: {
-                path: this.path,
+                path: targetDirHandle.path,
+                fromPath: handle.parent.path,
               },
             });
           },

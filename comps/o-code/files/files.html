@@ -62,10 +62,56 @@
     name="o-code"
     watch:active-path="activePath"
     watch:project-handle-path="projectPath"
+    on:refresh-list="refreshList"
   ></o-consumer>
   <script>
     export default async ({ load }) => {
       const { get } = await load("/nos/fs/main.js");
+
+      const loadFiles = async (target, path, projectPath) => {
+        const handle = await get(path);
+
+        // target.files = [];
+
+        const files = [];
+
+        for await (let item of handle.values()) {
+          if (item.name === "node_modules") {
+            continue;
+          }
+
+          const obj = {
+            path: item.path,
+            kind: item.kind,
+            name: item.name,
+          };
+
+          if (item.kind === "dir") {
+            obj.expanded = getExpandedState(item.path, projectPath);
+          }
+
+          // target.files.push(obj);
+          files.push(obj);
+
+          if (item.kind === "dir") {
+            // 读取目录下的文件和子目录
+            await loadFiles(
+              // target.files.find((e) => e.path === item.path),
+              obj,
+              item.path,
+              projectPath,
+            );
+          }
+        }
+
+        target.files = files;
+      };
+
+      const getExpandedState = (path, projectPath) => {
+        const key = `files-expanded-${projectPath}`;
+        const state = JSON.parse(sessionStorage.getItem(key) || "{}");
+        return state[path] || false;
+      };
 
       return {
         data: {
@@ -92,6 +138,29 @@
           },
         },
         proto: {
+          async refreshList(e) {
+            const { path, fromPath } = e.data;
+
+            // 只更新对应路径的数据
+            // 查找对应路径的文件或目录，先扁平化再查
+            // 递归扁平化多级文件树
+            const flatten = (list) =>
+              list.reduce((arr, item) => {
+                arr.push(item);
+                if (item.files && item.files.length) {
+                  arr.push(...flatten(item.files));
+                }
+                return arr;
+              }, []);
+
+            const flattenedFiles = flatten(this.files);
+
+            const data = flattenedFiles.find((e) => e.path === path);
+            const fromData = flattenedFiles.find((e) => e.path === fromPath);
+
+            await loadFiles(data, path, this.projectPath);
+            await loadFiles(fromData, fromPath, this.projectPath);
+          },
           openFileMenu(item, event) {
             event.preventDefault();
             event.stopPropagation();
@@ -116,11 +185,6 @@
             const state = JSON.parse(sessionStorage.getItem(key) || "{}");
             state[item.path] = item.expanded;
             sessionStorage.setItem(key, JSON.stringify(state));
-          },
-          getExpandedState(path) {
-            const key = `files-expanded-${this.projectPath}`;
-            const state = JSON.parse(sessionStorage.getItem(key) || "{}");
-            return state[path] || false;
           },
           clickItem(item) {
             if (item.kind === "dir") {
@@ -153,39 +217,7 @@
             });
           },
           async loadProjectFiles(path) {
-            const loadFiles = async (target, path) => {
-              const handle = await get(path);
-
-              target.files = [];
-
-              for await (let item of handle.values()) {
-                if (item.name === "node_modules") {
-                  continue;
-                }
-
-                const obj = {
-                  path: item.path,
-                  kind: item.kind,
-                  name: item.name,
-                };
-
-                if (item.kind === "dir") {
-                  obj.expanded = this.getExpandedState(item.path);
-                }
-
-                target.files.push(obj);
-
-                if (item.kind === "dir") {
-                  // 读取目录下的文件和子目录
-                  loadFiles(
-                    target.files.find((e) => e.path === item.path),
-                    item.path,
-                  );
-                }
-              }
-            };
-
-            loadFiles(this, path);
+            loadFiles(this, path, this.projectPath);
           },
         },
         attached() {},
