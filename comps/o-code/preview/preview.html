@@ -160,7 +160,10 @@
         </div>
       </div>
       <div class="refresh-btn" on:click="refreshWeb">
-        <n-icon icon="material-symbols:refresh" size="18"></n-icon>
+        <n-icon icon="material-symbols:refresh"></n-icon>
+      </div>
+      <div class="refresh-btn" on:click="openUrl">
+        <n-icon icon="majesticons:open-line"></n-icon>
       </div>
     </div>
     <div class="iframe-container">
@@ -201,6 +204,11 @@
           },
         },
         proto: {
+          openUrl() {
+            if (this.selectUrl) {
+              window.open(this.selectUrl);
+            }
+          },
           refreshWeb() {
             if (this.selectUrl) {
               const oldUrl = this.selectUrl;

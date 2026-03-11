@@ -63,6 +63,10 @@
       ></n-icon>
       创建目录
     </p-menu-item>
+    <p-menu-item>
+      <n-icon icon="boxicons:rename" slot="prefix"></n-icon>
+      重命名
+    </p-menu-item>
     <hr />
     <p-menu-item>
       <n-icon icon="boxicons:cut" slot="prefix"></n-icon>
@@ -89,6 +93,7 @@
             if (this.path) {
               window.open(`/$${this.path}`);
             }
+            this.openMenu = false;
           },
           openFileMenu(e) {
             const { path, kind, clientX, clientY } = e.data;
