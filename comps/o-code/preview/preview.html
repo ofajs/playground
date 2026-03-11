@@ -83,6 +83,7 @@
       width: 100%;
       height: 100%;
       border: none;
+      background-color: #fff;
     }
     .empty-state {
       display: flex;
@@ -121,13 +122,74 @@
       </o-else>
     </div>
   </div>
+  <o-consumer
+    name="o-code"
+    watch:project-handle-path="projectPath"
+  ></o-consumer>
   <script>
-    export default async () => {
+    export default async ({ load }) => {
+      const { get } = await load("/nos/fs/main.js");
+
       return {
         data: {
           url: "",
+          list: [],
+          projectPath: "",
+        },
+        watch: {
+          projectPath(path) {
+            if (!path) {
+              return;
+            }
+
+            this.loadProject(path);
+          },
+        },
+        proto: {
+          async loadProject(path) {
+            const handle = await get(path);
+
+            let list = await searchHtml(handle);
+
+            list = list.map((path) => {
+              return {
+                path,
+                url: `/$${path}`,
+              };
+            });
+
+            this.list = list;
+
+            if (this.list.length > 0) {
+              // 默认先看第一个
+              this.url = this.list[0].url;
+            }
+          },
         },
       };
+    };
+
+    // 查找符合规则的html文件
+    const searchHtml = async (dirHandle) => {
+      const list = [];
+
+      for await (let handle of dirHandle.values()) {
+        if (handle.name.endsWith(".html")) {
+          // 查看内容是否html开头
+          const content = await handle.text();
+
+          if (content.startsWith("<template ")) {
+            // 忽略组件或页面模块
+            continue;
+          }
+
+          list.push(handle.path);
+        } else if (handle.kind === "dir") {
+          list.push(...(await searchHtml(handle)));
+        }
+      }
+
+      return list;
     };
   </script>
 </template>
