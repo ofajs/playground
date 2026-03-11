@@ -112,7 +112,9 @@
         />
         <div class="web-selector">
           <o-fill :value="list">
-            <div class="web-option">{{$data.path}}</div>
+            <div class="web-option" on:click="$host.selectOpt($data)">
+              {{$data.path}}
+            </div>
           </o-fill>
         </div>
       </div>
@@ -157,6 +159,10 @@
           },
         },
         proto: {
+          selectOpt(item) {
+            this.selectUrl = item.url;
+            this.selectedPath = item.path;
+          },
           async loadProject(path) {
             const handle = await get(path);
 
