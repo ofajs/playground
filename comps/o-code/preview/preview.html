@@ -44,6 +44,7 @@
       background-color: #27ca3f;
     }
     .url-bar {
+      position: relative;
       flex: 1;
       display: flex;
       align-items: center;
@@ -62,6 +63,42 @@
       background: transparent;
       font-size: 12px;
       color: var(--md-sys-color-on-surface);
+      cursor: pointer;
+    }
+    .url-bar input:focus {
+      cursor: text;
+    }
+    .selector-wrapper {
+      position: relative;
+      flex: 1;
+    }
+    .web-selector {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      background-color: var(--md-sys-color-surface);
+      border: 1px solid rgba(from var(--md-sys-color-normal) r g b / 0.3);
+      border-radius: 4px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      z-index: 100;
+      display: none;
+    }
+    .web-selector.show {
+      display: block;
+    }
+    .web-option {
+      padding: 8px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .web-option:hover {
+      background-color: rgba(from var(--md-sys-color-on-surface) r g b / 0.08);
     }
     .refresh-btn {
       display: flex;
@@ -104,18 +141,22 @@
         <div class="control maximize"></div>
       </div>
       <div class="url-bar">
-        <input
-          type="text"
-          :value="selectedPath"
-          placeholder="输入网址..."
-          readonly
-        />
-        <div class="web-selector">
-          <o-fill :value="list">
-            <div class="web-option" on:click="$host.selectOpt($data)">
-              {{$data.path}}
-            </div>
-          </o-fill>
+        <div class="selector-wrapper">
+          <input
+            type="text"
+            :value="selectedPath"
+            placeholder="输入网址..."
+            readonly
+            on:click="toggleSelector($event)"
+            style="width: 100%"
+          />
+          <div class="web-selector" class:show="selectorVisible">
+            <o-fill :value="list">
+              <div class="web-option" on:click="$host.selectOpt($data)">
+                {{$data.path}}
+              </div>
+            </o-fill>
+          </div>
         </div>
       </div>
       <div class="refresh-btn">
@@ -148,6 +189,7 @@
           selectedPath: "",
           list: [],
           projectPath: "",
+          selectorVisible: false,
         },
         watch: {
           projectPath(path) {
@@ -159,9 +201,19 @@
           },
         },
         proto: {
+          toggleSelector(event) {
+            event.stopPropagation();
+            this.selectorVisible = !this.selectorVisible;
+          },
+          closeSelector(e) {
+            if (!e.target.closest(".selector-wrapper")) {
+              this.selectorVisible = false;
+            }
+          },
           selectOpt(item) {
             this.selectUrl = item.url;
             this.selectedPath = item.path;
+            this.selectorVisible = false;
           },
           async loadProject(path) {
             const handle = await get(path);
@@ -183,6 +235,15 @@
               this.selectedPath = this.list[0].path;
             }
           },
+        },
+        attached() {
+          document.addEventListener(
+            "click",
+            (this._close_func = this.closeSelector.bind(this)),
+          );
+        },
+        detached() {
+          document.removeEventListener("click", this._close_func);
         },
       };
     };
