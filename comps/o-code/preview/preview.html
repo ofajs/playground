@@ -104,15 +104,25 @@
         <div class="control maximize"></div>
       </div>
       <div class="url-bar">
-        <input type="text" :value="url" placeholder="输入网址..." readonly />
+        <input
+          type="text"
+          :value="selectedPath"
+          placeholder="输入网址..."
+          readonly
+        />
+        <div class="web-selector">
+          <o-fill :value="list">
+            <div class="web-option">{{$data.path}}</div>
+          </o-fill>
+        </div>
       </div>
       <div class="refresh-btn">
         <n-icon icon="material-symbols:refresh" size="18"></n-icon>
       </div>
     </div>
     <div class="iframe-container">
-      <o-if :value="url">
-        <iframe attr:src="url"></iframe>
+      <o-if :value="selectUrl">
+        <iframe attr:src="selectUrl"></iframe>
       </o-if>
       <o-else>
         <div class="empty-state">
@@ -132,7 +142,8 @@
 
       return {
         data: {
-          url: "",
+          selectUrl: "",
+          selectedPath: "",
           list: [],
           projectPath: "",
         },
@@ -162,7 +173,8 @@
 
             if (this.list.length > 0) {
               // 默认先看第一个
-              this.url = this.list[0].url;
+              this.selectUrl = this.list[0].url;
+              this.selectedPath = this.list[0].path;
             }
           },
         },
