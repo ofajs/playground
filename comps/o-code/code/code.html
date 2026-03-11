@@ -1,12 +1,51 @@
 <template page>
   <l-m src="../../../comps/monaco-editor/monaco-editor.html"></l-m>
+  <l-m src="/nos/n-icon/n-icon.html"></l-m>
   <style>
     :host {
       display: block;
       width: 100%;
       height: 100%;
+      position: relative;
+    }
+    .error-article {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background-color: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+    }
+    .error-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: var(--md-sys-color-error);
+    }
+    .error-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--md-sys-color-on-surface);
+    }
+    .error-message {
+      font-size: 14px;
+      color: var(--md-sys-color-on-surface);
+      opacity: 0.7;
+      word-break: break-all;
+      text-align: center;
+      padding: 0 24px;
+      max-width: 80%;
     }
   </style>
+  <o-if :value="isError">
+    <div class="error-article">
+      <n-icon icon="material-symbols:error-outline" class="error-icon"></n-icon>
+      <div class="error-title">文件加载失败</div>
+      <div class="error-message">当前文件路径：{{ errorPath }}</div>
+    </div>
+  </o-if>
   <monaco-editor
     plugins="prettier"
     on:initialized="initOK"
@@ -20,6 +59,8 @@
       return {
         data: {
           activePath: "", // 激活路径
+          isError: false,
+          errorPath: "",
         },
         watch: {
           async activePath(path) {
@@ -28,7 +69,19 @@
             }
 
             const handle = await get(path);
-            const content = await handle.text();
+
+            let content = "";
+
+            try {
+              content = await handle.text();
+            } catch (err) {
+              this.isError = true;
+              this.errorPath = path;
+              console.error(err);
+              return;
+            }
+
+            this.isError = false;
 
             await this._initok;
 

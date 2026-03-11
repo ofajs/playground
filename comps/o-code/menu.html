@@ -68,27 +68,87 @@
       重命名
     </p-menu-item>
     <hr />
-    <p-menu-item>
+    <p-menu-item on:click="cutFile">
       <n-icon icon="boxicons:cut" slot="prefix"></n-icon>
       剪切
     </p-menu-item>
-    <p-menu-item>
+    <p-menu-item on:click="copyFile">
       <n-icon icon="boxicons:copy" slot="prefix"></n-icon>
       复制
     </p-menu-item>
-    <p-menu-item>
+    <p-menu-item attr:disabled="!inCut && !inCopy" on:click="pasteFile">
       <n-icon icon="boxicons:paste" slot="prefix"></n-icon>
       粘贴
+    </p-menu-item>
+    <hr />
+    <p-menu-item on:click="deleteFile">
+      <n-icon icon="material-symbols:delete-outline" slot="prefix"></n-icon>
+      删除
     </p-menu-item>
   </p-menu>
   <script>
     export default async ({ load }) => {
+      const { get } = await load("/nos/fs/main.js");
+      const { toast } = await load("/gh/ofajs/Punch-UI/packages/util.js");
+
       return {
         data: {
           openMenu: false,
           path: null,
+          inCut: "", // 等待剪切文件或目录
+          inCopy: "", // 等待复制文件或目录
         },
         proto: {
+          cutFile() {
+            this.inCut = this.path;
+            this.inCopy = "";
+            this.openMenu = false;
+          },
+          copyFile() {
+            this.inCut = "";
+            this.inCopy = this.path;
+            this.openMenu = false;
+          },
+          async pasteFile() {
+            let targetDirHandle = await get(this.path);
+
+            if (targetDirHandle.kind === "file") {
+              targetDirHandle = targetDirHandle.parent;
+            }
+
+            const handle = await get(this.inCut || this.inCopy);
+
+            // 查看是否有同名文件或目录
+            const equalNameFile = await targetDirHandle.get(handle.name);
+            if (equalNameFile) {
+              toast({
+                color: "error",
+                content: "目标目录下已存在相同名称文件或目录",
+              });
+              return;
+            }
+
+            this.openMenu = false;
+
+            if (this.inCut) {
+              // 粘贴操作
+              await handle.moveTo(targetDirHandle);
+            } else if (this.inCopy) {
+              // 粘贴操作
+              await handle.copyTo(targetDirHandle);
+            }
+
+            this.inCut = "";
+            this.inCopy = "";
+
+            // 出发刷新列表
+            const provider = this.getProvider("o-code");
+            provider.dispatch("refresh-list", {
+              data: {
+                path: this.path,
+              },
+            });
+          },
           openFile() {
             if (this.path) {
               window.open(`/$${this.path}`);
@@ -106,6 +166,9 @@
 
             menu.style.left = `${clientX}px`;
             menu.style.top = `${clientY}px`;
+          },
+          deleteFile() {
+            debugger;
           },
         },
       };
