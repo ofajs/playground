@@ -43,9 +43,13 @@
   <!-- 专门用于处理菜单的 -->
   <o-consumer name="o-code" on:open-file-menu="openFileMenu"></o-consumer>
   <p-menu class="main-menu" attr:open="openMenu ? 'on' : 'off'">
-    <p-menu-item>
+    <!-- <p-menu-item>
       <n-icon icon="lets-icons:view" slot="prefix"></n-icon>
       预览
+    </p-menu-item> -->
+    <p-menu-item on:click="openFile">
+      <n-icon icon="majesticons:open-line" slot="prefix"></n-icon>
+      外部打开
     </p-menu-item>
     <hr />
     <p-menu-item>
@@ -78,10 +82,18 @@
       return {
         data: {
           openMenu: false,
+          path: null,
         },
         proto: {
+          openFile() {
+            if (this.path) {
+              window.open(`/$${this.path}`);
+            }
+          },
           openFileMenu(e) {
             const { path, kind, clientX, clientY } = e.data;
+
+            this.path = path;
 
             const menu = this.shadow.$(".main-menu");
 
