@@ -89,7 +89,9 @@
   <script>
     export default async ({ load }) => {
       const { get } = await load("/nos/fs/main.js");
-      const { toast } = await load("/gh/ofajs/Punch-UI/packages/util.js");
+      const { toast, confirm } = await load(
+        "/gh/ofajs/Punch-UI/packages/util.js",
+      );
 
       return {
         data: {
@@ -169,8 +171,21 @@
             menu.style.left = `${clientX}px`;
             menu.style.top = `${clientY}px`;
           },
-          deleteFile() {
-            debugger;
+          async deleteFile() {
+            this.openMenu = false;
+
+            const result = await confirm({
+              title: "删除确认",
+              content: `确定删除 ${this.path} 吗？该操作不可撤销`,
+            });
+
+            if (!result) {
+              return;
+            }
+
+            const handle = await get(this.path);
+
+            await handle.remove();
           },
         },
       };
