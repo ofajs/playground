@@ -22,15 +22,24 @@
       font-size: 14px;
       font-weight: bold;
     }
+    .logo img {
+      height: 24px;
+    }
+    .logo-text-wrapper {
+      margin-left: 6px;
+      line-height: 0.76em;
+    }
+    .logo-sub-text {
+      font-size: 10px;
+      color: var(--md-sys-color-normal);
+    }
   </style>
   <div class="logo">
     <p-wave></p-wave>
-    <img src="./logo.svg" style="height: 24px" alt="logo" />
-    <div style="margin-left: 6px; line-height: 0.76em">
+    <img src="./logo.svg" alt="logo" />
+    <div class="logo-text-wrapper">
       <div class="logo-text">OFA Playground</div>
-      <span style="font-size: 10px; color: var(--md-sys-color-normal)"
-        >切换项目</span
-      >
+      <span class="logo-sub-text">切换项目</span>
     </div>
   </div>
   <p-button
