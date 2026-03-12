@@ -19,9 +19,16 @@
   <p-list class="main-list">
     <p-list-item>
       <b style="font-size: 12px">文件</b>
-      <p-button size="mini" slot="suffix" icon variant="text">
+      <p-button
+        size="mini"
+        slot="suffix"
+        icon
+        variant="text"
+        attr:disabled="reloading"
+        on:click="loadProjectFiles()"
+      >
         <n-icon
-          icon="material-symbols:add-rounded"
+          icon="material-symbols:refresh"
           style="font-size: 18px"
         ></n-icon>
       </p-button>
@@ -127,6 +134,7 @@
               kind: "file",
             },
           ],
+          reloading: false,
         },
         watch: {
           projectPath(path) {
@@ -219,7 +227,12 @@
             });
           },
           async loadProjectFiles(path) {
-            loadFiles(this, path, this.projectPath);
+            this.reloading = true;
+            if (!path) {
+              path = this.projectPath;
+            }
+            await loadFiles(this, path, this.projectPath);
+            this.reloading = false;
           },
         },
         attached() {},
