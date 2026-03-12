@@ -156,10 +156,12 @@
             const flattenedFiles = flatten(this.files);
 
             const data = flattenedFiles.find((e) => e.path === path);
-            const fromData = flattenedFiles.find((e) => e.path === fromPath);
-
             await loadFiles(data, path, this.projectPath);
-            await loadFiles(fromData, fromPath, this.projectPath);
+
+            if (fromPath) {
+              const fromData = flattenedFiles.find((e) => e.path === fromPath);
+              await loadFiles(fromData, fromPath, this.projectPath);
+            }
           },
           openFileMenu(item, event) {
             event.preventDefault();

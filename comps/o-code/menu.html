@@ -52,11 +52,11 @@
       外部打开
     </p-menu-item>
     <hr />
-    <p-menu-item>
+    <p-menu-item on:click="createItem('file')">
       <n-icon icon="iconamoon:file-add" slot="prefix"></n-icon>
       创建文件
     </p-menu-item>
-    <p-menu-item>
+    <p-menu-item on:click="createItem('dir')">
       <n-icon
         icon="material-symbols:create-new-folder-outline"
         slot="prefix"
@@ -89,7 +89,7 @@
   <script>
     export default async ({ load }) => {
       const { get } = await load("/nos/fs/main.js");
-      const { toast, confirm } = await load(
+      const { toast, confirm, prompt } = await load(
         "/gh/ofajs/Punch-UI/packages/util.js",
       );
 
@@ -101,6 +101,55 @@
           inCopy: "", // 等待复制文件或目录
         },
         proto: {
+          async createItem(type) {
+            this.openMenu = false;
+
+            const result = await prompt({
+              title: "创建" + (type === "file" ? "文件" : "目录"),
+              message: `在 ${this.path} 创建${type === "file" ? "文件" : "目录"}`,
+              label: `请输入${type === "file" ? "文件" : "目录"}名称`,
+            });
+
+            if (!result) {
+              return;
+            }
+
+            let handle = await get(this.path);
+            if (handle.kind === "file") {
+              handle = handle.parent;
+            }
+
+            // 查看是否已经有存在的文件或目录
+            const exitHandle = await handle.get(result);
+            if (exitHandle) {
+              toast({
+                color: "error",
+                message:
+                  "目标目录下已存在相同名称的" +
+                  (exitHandle.kind === "file" ? "文件" : "目录"),
+              });
+              return;
+            }
+
+            if (type === "file") {
+              await handle.get(result, {
+                create: "file",
+              });
+            } else {
+              await handle.get(result, {
+                create: "dir",
+              });
+            }
+
+            // 刷新列表
+            const provider = this.getProvider("o-code");
+
+            provider.dispatch("refresh-list", {
+              data: {
+                path: handle.path,
+              },
+            });
+          },
           cutFile() {
             this.inCut = this.path;
             this.inCopy = "";
@@ -125,7 +174,7 @@
             if (equalNameFile) {
               toast({
                 color: "error",
-                content: "目标目录下已存在相同名称文件或目录",
+                message: "目标目录下已存在相同名称文件或目录",
               });
               return;
             }
@@ -176,7 +225,7 @@
 
             const result = await confirm({
               title: "删除确认",
-              content: `确定删除 ${this.path} 吗？该操作不可撤销`,
+              message: `确定删除 ${this.path} 吗？该操作不可撤销`,
             });
 
             if (!result) {
@@ -185,7 +234,18 @@
 
             const handle = await get(this.path);
 
+            const parentHandlePath = handle.parent.path;
+
             await handle.remove();
+
+            // 刷新列表
+            const provider = this.getProvider("o-code");
+
+            provider.dispatch("refresh-list", {
+              data: {
+                path: parentHandlePath,
+              },
+            });
           },
         },
       };
