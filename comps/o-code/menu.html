@@ -63,7 +63,7 @@
       ></n-icon>
       创建目录
     </p-menu-item>
-    <p-menu-item>
+    <p-menu-item on:click="renameItem">
       <n-icon icon="boxicons:rename" slot="prefix"></n-icon>
       重命名
     </p-menu-item>
@@ -101,6 +101,44 @@
           inCopy: "", // 等待复制文件或目录
         },
         proto: {
+          async renameItem() {
+            this.openMenu = false;
+
+            const handle = await get(this.path);
+            const parentHandle = handle.parent;
+
+            const result = await prompt({
+              title: "重命名",
+              message: `重命名 ${this.path}`,
+              label: "请输入新名称",
+              value: handle.name,
+            });
+
+            if (!result || result === handle.name) {
+              return;
+            }
+
+            const exitHandle = await parentHandle.get(result);
+            if (exitHandle) {
+              toast({
+                color: "error",
+                message:
+                  "目标目录下已存在相同名称的" +
+                  (exitHandle.kind === "file" ? "文件" : "目录"),
+              });
+              return;
+            }
+
+            await handle.moveTo(result);
+
+            const provider = this.getProvider("o-code");
+
+            provider.dispatch("refresh-list", {
+              data: {
+                path: parentHandle.path,
+              },
+            });
+          },
           async createItem(type) {
             this.openMenu = false;
 
@@ -114,6 +152,7 @@
               return;
             }
 
+            // 获取对应目录，如果是file，则获取父目录上创建
             let handle = await get(this.path);
             if (handle.kind === "file") {
               handle = handle.parent;
