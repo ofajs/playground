@@ -1,27 +1,37 @@
 <template page>
+  <l-m src="/gh/ofajs/Punch-UI/packages/wave/wave.html"></l-m>
   <style>
     :host {
       display: flex;
       width: 100%;
       height: 40px;
       align-items: center;
+      cursor: pointer;
     }
     .logo {
+      position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 40px;
-      padding-left: 16px;
+      padding: 0 20px;
+      margin: 4px 0 0 4px;
+      border-radius: 16px;
     }
     .logo-text {
-      margin-left: 4px;
       font-size: 14px;
       font-weight: bold;
     }
   </style>
   <div class="logo">
+    <p-wave></p-wave>
     <img src="./logo.svg" style="height: 24px" alt="logo" />
-    <div class="logo-text">OFA Playground</div>
+    <div style="margin-left: 6px; line-height: 0.76em">
+      <div class="logo-text">OFA Playground</div>
+      <span style="font-size: 10px; color: var(--md-sys-color-normal)"
+        >切换项目</span
+      >
+    </div>
   </div>
   <p-button
     icon
