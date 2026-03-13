@@ -243,9 +243,12 @@
           <div class="top-btn" on:click="handleReloadClick">
             <n-icon icon="mdi:reload"></n-icon>
           </div>
-          <a class="top-btn" attr:href="previewPath" target="_blank">
+          <div class="top-btn" on:click="handleOpenClick">
             <n-icon icon="majesticons:open"></n-icon>
-          </a>
+          </div>
+          <!-- <a class="top-btn" attr:href="previewPath" target="_blank">
+            <n-icon icon="majesticons:open"></n-icon>
+          </a> -->
         </o-if>
       </div>
       <div class="content">
@@ -314,6 +317,8 @@
         load(`${prefix}/nos/util/hash/get-hash.js`),
       ]);
 
+      const { compress, decompress } = await load("../util.js");
+
       return {
         tag: "o-playground",
         attrs: { already: "" },
@@ -338,6 +343,20 @@
           },
         },
         proto: {
+          async handleOpenClick() {
+            // 获取所有内容并精简，保存成一个对象
+            const data = await this.getFileContent();
+            const redata = data.files.map((item) => ({
+              p: item.path,
+              c: item.content,
+            }));
+            const str = JSON.stringify(redata);
+
+            // 利用原生api压缩内容
+            const compressedStr = await compress(str);
+
+            debugger;
+          },
           clearEditorResize() {
             localStorage.removeItem("playground-editor-width");
 
