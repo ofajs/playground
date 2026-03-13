@@ -1,0 +1,24 @@
+<template page>
+  <style>
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <l-m src="../../comps/o-code/o-code.html"></l-m>
+  <o-code :path="projectPath"></o-code>
+  <script>
+    export default async ({ load, query }) => {
+      console.log("query: ", query);
+
+      return {
+        data: {
+          projectPath:
+            "nos-demo-case/b20e63071106d2801d9f60cc766d8b2045657ff951f4a624b43fc28c619586e0", // 项目路径
+          // projectPath: "nos-4.0.13"
+        },
+      };
+    };
+  </script>
+</template>

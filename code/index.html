@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ofa playground code</title>
-    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"></script>
+    <script src="/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"></script>
+    <script src="/gh/kirakiray/ofa.js/libs/router/dist/router.min.js"></script>
     <link rel="stylesheet" href="./theme.css" />
     <style>
       html,
@@ -16,10 +17,8 @@
     </style>
   </head>
   <body>
-    <l-m src="../comps/o-code/o-code.html"></l-m>
-    <!-- <o-code
-      path="nos-demo-case/b20e63071106d2801d9f60cc766d8b2045657ff951f4a624b43fc28c619586e0"
-    ></o-code> -->
-    <o-code path="nos-4.0.13"></o-code>
+    <o-router fix-body>
+      <o-app src="./app-config.js"></o-app>
+    </o-router>
   </body>
 </html>
