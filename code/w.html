@@ -12,6 +12,7 @@
       import { decompress } from "../comps/util.js";
       import { getHash } from "https://core.noneos.com/nos/util/hash/get-hash.js";
       import { get, init } from "https://core.noneos.com/nos/fs/main.js";
+      import jsBeautify from "https://cdn.jsdelivr.net/npm/js-beautify@1.15.1/+esm";
 
       (async () => {
         const params = new URLSearchParams(location.search);
@@ -51,6 +52,55 @@
           const handle = await projectDirHandle.get(path, {
             create: "file",
           });
+
+          // 判断是html文件，则格式化html
+          if (path.endsWith(".html")) {
+            // 判断如果是不完整的html内容，则补充模板内容
+            if (
+              !content.startsWith("<template ") &&
+              !content.includes(`<!doctype`)
+            ) {
+              content = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${path.split("/").pop().replace(".html", "")}</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    ${content}
+  </body>
+</html>
+`;
+            }
+
+            content = jsBeautify.html(content, {
+              indent_size: 2,
+              indent_char: " ",
+              eol: "\n",
+              preserve_newlines: false,
+            });
+          } else if (path.endsWith(".js") || path.endsWith(".mjs")) {
+            content = jsBeautify.js(content, {
+              indent_size: 2,
+              indent_char: " ",
+              eol: "\n",
+            });
+          } else if (path.endsWith(".css") || path.endsWith(".scss")) {
+            content = jsBeautify.css(content, {
+              indent_size: 2,
+              indent_char: " ",
+              eol: "\n",
+            });
+          }
 
           await handle.write(content);
         }
