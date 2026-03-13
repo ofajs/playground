@@ -350,12 +350,21 @@
               p: item.path,
               c: item.content,
             }));
+
             const str = JSON.stringify(redata);
 
             // 利用原生api压缩内容
             const compressedStr = await compress(str);
 
-            debugger;
+            console.log(compressedStr);
+
+            if (location.host.includes("localhost")) {
+              window.open(`/code/w.html?d=${compressedStr}`);
+            } else {
+              window.open(
+                `https://playground.ofajs.com/code/w.html?d=${compressedStr}`,
+              );
+            }
           },
           clearEditorResize() {
             localStorage.removeItem("playground-editor-width");

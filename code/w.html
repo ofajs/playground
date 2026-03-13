@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Writing...</title>
+    <link rel="stylesheet" href="./theme.css" />
+  </head>
+  <body>
+    Waiting...
+    <script type="module">
+      import { decompress } from "../comps/util.js";
+      import { getHash } from "https://core.noneos.com/nos/util/hash/get-hash.js";
+      import { get, init } from "https://core.noneos.com/nos/fs/main.js";
+
+      (async () => {
+        const params = new URLSearchParams(location.search);
+        const compressedStr = params.get("d");
+        if (!compressedStr) {
+          return;
+        }
+
+        const decompressedStr = await decompress(compressedStr);
+
+        // 计算hash值
+        const hash = await getHash(decompressedStr);
+
+        // 写入到项目文件
+        await init("code-projects");
+        await init("code-origins");
+
+        const projectDirHandle = await get("code-projects/" + hash, {
+          create: "dir",
+        });
+
+        // 写入原始文件
+        const originFileHandle = await get(`code-origins/${hash}.json`, {
+          create: "file",
+        });
+
+        await originFileHandle.write(decompressedStr);
+
+        // 先清空项目文件
+        for await (const handle of projectDirHandle.values()) {
+          await handle.remove();
+        }
+
+        // 写入项目文件
+        const data = JSON.parse(decompressedStr);
+        for (let { p: path, c: content } of data) {
+          const handle = await projectDirHandle.get(path, {
+            create: "file",
+          });
+
+          await handle.write(content);
+        }
+
+        location.href = `./?h=${hash}`;
+      })();
+    </script>
+  </body>
+</html>
