@@ -88,23 +88,22 @@
         data: {
           activePath: "",
           projectPath: "",
-          tabs:
-            JSON.parse(
-              localStorage.getItem(
-                "tabs_" + (localStorage.getItem("currentProjectPath") || ""),
-              ),
-            ) || [],
+          tabs: [],
         },
         watch: {
-          tabs() {
-            localStorage.setItem(
+          tabs(tabs) {
+            if (tabs.length === 0) {
+              return;
+            }
+
+            sessionStorage.setItem(
               "tabs_" + this.projectPath,
               JSON.stringify(this.tabs),
             );
           },
           projectPath(path) {
-            localStorage.setItem("currentProjectPath", path);
-            this.tabs = JSON.parse(localStorage.getItem("tabs_" + path)) || [];
+            this.tabs =
+              JSON.parse(sessionStorage.getItem("tabs_" + path)) || [];
           },
         },
         proto: {
