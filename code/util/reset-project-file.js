@@ -2,39 +2,18 @@ import { getHash } from "https://core.noneos.com/nos/util/hash/get-hash.js";
 import { get, init } from "https://core.noneos.com/nos/fs/main.js";
 import jsBeautify from "https://cdn.jsdelivr.net/npm/js-beautify@1.15.1/+esm";
 
-export const resetProjectFile = async (originStr) => {
-  const hash = await getHash(originStr);
+const FORMATTING_OPTIONS = {
+  indent_size: 2,
+  indent_char: " ",
+  eol: "\n",
+};
 
-  await init("code-projects");
-  const projectDirHandle = await get("code-projects/" + hash, {
-    create: "dir",
-  });
-
-  // 先清空项目文件
-  for await (const handle of projectDirHandle.values()) {
-    await handle.remove();
-  }
-
-  // 写入项目文件
-  const data = JSON.parse(originStr);
-  for (let { p: path, c: content } of data) {
-    const handle = await projectDirHandle.get(path, {
-      create: "file",
-    });
-
-    // 判断是html文件，则格式化html
-    if (path.endsWith(".html")) {
-      // 判断如果是不完整的html内容，则补充模板内容
-      if (
-        !content.startsWith("<template ") &&
-        !content.toLowerCase().includes(`<!doctype`)
-      ) {
-        content = `<!doctype html>
+const HTML_TEMPLATE = (title, content) => `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${path.split("/").pop().replace(".html", "")}</title>
+    <title>${title}</title>
     <style>
       html,
       body {
@@ -49,28 +28,47 @@ export const resetProjectFile = async (originStr) => {
   </body>
 </html>
 `;
-      }
 
-      content = jsBeautify.html(content, {
-        indent_size: 2,
-        indent_char: " ",
-        eol: "\n",
-        preserve_newlines: false,
-      });
-    } else if (path.endsWith(".js") || path.endsWith(".mjs")) {
-      content = jsBeautify.js(content, {
-        indent_size: 2,
-        indent_char: " ",
-        eol: "\n",
-      });
-    } else if (path.endsWith(".css") || path.endsWith(".scss")) {
-      content = jsBeautify.css(content, {
-        indent_size: 2,
-        indent_char: " ",
-        eol: "\n",
-      });
+const isHTML = (path) => path.endsWith(".html");
+const isJS = (path) => path.endsWith(".js") || path.endsWith(".mjs");
+const isCSS = (path) => path.endsWith(".css") || path.endsWith(".scss");
+
+const formatContent = (path, content) => {
+  if (isHTML(path)) {
+    if (!content.startsWith("<template ") && !content.toLowerCase().includes(`<!doctype`)) {
+      const title = path.split("/").pop().replace(".html", "");
+      content = HTML_TEMPLATE(title, content);
     }
+    return jsBeautify.html(content, { ...FORMATTING_OPTIONS, preserve_newlines: false });
+  }
 
-    await handle.write(content);
+  if (isJS(path)) {
+    return jsBeautify.js(content, FORMATTING_OPTIONS);
+  }
+
+  if (isCSS(path)) {
+    return jsBeautify.css(content, FORMATTING_OPTIONS);
+  }
+
+  return content;
+};
+
+export const resetProjectFile = async (filesJson) => {
+  const projectHash = await getHash(filesJson);
+
+  await init("code-projects");
+  const projectDir = await get("code-projects/" + projectHash, {
+    create: "dir",
+  });
+
+  for await (const handle of projectDir.values()) {
+    await handle.remove();
+  }
+
+  const files = JSON.parse(filesJson);
+  for (const { p: path, c: content } of files) {
+    const handle = await projectDir.get(path, { create: "file" });
+    const formattedContent = formatContent(path, content);
+    await handle.write(formattedContent);
   }
 };

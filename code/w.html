@@ -16,30 +16,23 @@
 
       (async () => {
         const params = new URLSearchParams(location.search);
-        const compressedStr = params.get("d");
-        if (!compressedStr) {
+        const compressedData = params.get("d");
+        if (!compressedData) {
           return;
         }
 
-        const decompressedStr = await decompress(compressedStr);
+        const filesJson = await decompress(compressedData);
+        const projectHash = await getHash(filesJson);
 
-        // 计算hash值
-        const hash = await getHash(decompressedStr);
-
-        // 写入到项目文件
         await init("code-origins");
-
-        // 写入原始文件
-        const originFileHandle = await get(`code-origins/${hash}.json`, {
+        const originFile = await get(`code-origins/${projectHash}.json`, {
           create: "file",
         });
+        await originFile.write(filesJson);
 
-        await originFileHandle.write(decompressedStr);
+        await resetProjectFile(filesJson);
 
-        // 重置项目文件
-        await resetProjectFile(decompressedStr);
-
-        location.href = `./?h=${hash}`;
+        location.href = `./?h=${projectHash}`;
       })();
     </script>
   </body>
