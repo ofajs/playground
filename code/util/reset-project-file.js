@@ -35,11 +35,17 @@ const isCSS = (path) => path.endsWith(".css") || path.endsWith(".scss");
 
 const formatContent = (path, content) => {
   if (isHTML(path)) {
-    if (!content.startsWith("<template ") && !content.toLowerCase().includes(`<!doctype`)) {
+    if (
+      !content.startsWith("<template ") &&
+      !content.toLowerCase().includes(`<!doctype`)
+    ) {
       const title = path.split("/").pop().replace(".html", "");
       content = HTML_TEMPLATE(title, content);
     }
-    return jsBeautify.html(content, { ...FORMATTING_OPTIONS, preserve_newlines: false });
+    return jsBeautify.html(content, {
+      ...FORMATTING_OPTIONS,
+      preserve_newlines: false,
+    });
   }
 
   if (isJS(path)) {
@@ -53,8 +59,11 @@ const formatContent = (path, content) => {
   return content;
 };
 
-export const resetProjectFile = async (filesJson) => {
-  const projectHash = await getHash(filesJson);
+export const resetProjectFile = async (projectJSON) => {
+  const project = JSON.parse(projectJSON);
+  const files = project.files;
+
+  const projectHash = await getHash(JSON.stringify(project.files));
 
   await init("code-projects");
   const projectDir = await get("code-projects/" + projectHash, {
@@ -65,7 +74,6 @@ export const resetProjectFile = async (filesJson) => {
     await handle.remove();
   }
 
-  const files = JSON.parse(filesJson);
   for (const { p: path, c: content } of files) {
     const handle = await projectDir.get(path, { create: "file" });
     const formattedContent = formatContent(path, content);

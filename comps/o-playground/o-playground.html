@@ -246,9 +246,6 @@
           <div class="top-btn" on:click="handleOpenClick">
             <n-icon icon="majesticons:open"></n-icon>
           </div>
-          <!-- <a class="top-btn" attr:href="previewPath" target="_blank">
-            <n-icon icon="majesticons:open"></n-icon>
-          </a> -->
         </o-if>
       </div>
       <div class="content">
@@ -346,17 +343,20 @@
           async handleOpenClick() {
             // 获取所有内容并精简，保存成一个对象
             const data = await this.getFileContent();
-            const redata = data.files.map((item) => ({
+            const files = data.files.map((item) => ({
               p: item.path,
               c: item.content,
             }));
+
+            const redata = {
+              active: this.activeFilePath,
+              files,
+            };
 
             const str = JSON.stringify(redata);
 
             // 利用原生api压缩内容
             const compressedStr = await compress(str);
-
-            console.log(compressedStr);
 
             if (location.host.includes("localhost")) {
               window.open(`/code/w.html?d=${compressedStr}`);

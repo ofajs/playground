@@ -20,17 +20,17 @@
         if (!compressedData) {
           return;
         }
-
-        const filesJson = await decompress(compressedData);
-        const projectHash = await getHash(filesJson);
+        const projectJson = await decompress(compressedData);
+        const project = JSON.parse(projectJson);
+        const projectHash = await getHash(JSON.stringify(project.files));
 
         await init("code-origins");
         const originFile = await get(`code-origins/${projectHash}.json`, {
           create: "file",
         });
-        await originFile.write(filesJson);
+        await originFile.write(projectJson);
 
-        await resetProjectFile(filesJson);
+        await resetProjectFile(projectJson);
 
         location.href = `./?h=${projectHash}`;
       })();
