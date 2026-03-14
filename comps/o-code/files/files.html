@@ -149,6 +149,11 @@
           async refreshList(e) {
             const { path, fromPath } = e.data;
 
+            if (path === this.projectPath) {
+              this.loadProjectFiles();
+              return;
+            }
+
             // 只更新对应路径的数据
             // 查找对应路径的文件或目录，先扁平化再查
             // 递归扁平化多级文件树
