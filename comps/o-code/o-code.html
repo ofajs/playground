@@ -157,7 +157,7 @@
         data: {
           showSidebar: true,
           showPreview:
-            sessionStorage.getItem("showPreview") === "true" || false,
+            sessionStorage.getItem("showPreview") === "false" ? false : true,
           showResizeMask: false,
           activePath: sessionStorage.getItem("activePath") || "", // 激活路径
           resizeType: null, // 'sidebar' | 'preview' | null

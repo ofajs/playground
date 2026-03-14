@@ -145,7 +145,7 @@
           <input
             type="text"
             :value="selectedPath"
-            placeholder="输入网址..."
+            placeholder="No previewable files"
             readonly
             on:click="toggleSelector($event)"
             style="width: 100%"
@@ -239,7 +239,8 @@
 
             list = list.map((path) => {
               return {
-                path,
+                realPath: path,
+                path: path.split("/").slice(2).join("/"),
                 url: `/$${path}`,
               };
             });
