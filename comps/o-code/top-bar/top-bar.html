@@ -65,19 +65,31 @@
     variant="outlined"
     size="small"
     style="margin-left: auto; margin-right: 12px"
+    on:click="clickDownloadBtn"
   >
-    <n-icon icon="mdi:import" slot="prefix"></n-icon>
-    导入项目
+    <n-icon icon="mdi:download" slot="prefix"></n-icon>
+    下载项目
   </p-button>
 
   <p-button size="small" style="margin-right: 16px">
     <n-icon icon="ic:twotone-share" slot="prefix"></n-icon>
     发布
   </p-button>
+
+  <o-consumer
+    name="o-code"
+    watch:project-handle-path="projectPath"
+  ></o-consumer>
+
   <script>
     export default async ({ load }) => {
+      const { download } = await load("/nos/fs/download.js");
+      const { get } = await load("/nos/fs/main.js");
+
       return {
-        data: {},
+        data: {
+          projectPath: null,
+        },
         proto: {
           clickPreviewBtn() {
             const provider = this.getProvider("o-code");
@@ -87,6 +99,10 @@
           clickSidebarBtn() {
             const provider = this.getProvider("o-code");
             provider.emit("click-sidebar-btn");
+          },
+          async clickDownloadBtn() {
+            const handle = await get(this.projectPath);
+            download(handle);
           },
         },
       };
