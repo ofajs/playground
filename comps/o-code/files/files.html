@@ -235,7 +235,28 @@
             this.reloading = false;
           },
         },
-        attached() {},
+        attached() {
+          setTimeout(async () => {
+            // 查看是否没有tabs，没有的话点击项目中激活的项目
+            if (this.activePath) {
+              return;
+            }
+
+            const searchParam = new URLSearchParams(window.location.search);
+            const hash = searchParam.get("h");
+
+            const originHandle = await get(`code-origins/${hash}.json`);
+            const originData = await originHandle.json();
+
+            // 选中激活项目
+            const activePath = `${this.projectPath}/${originData.active}`;
+            const item = this.files.find((e) => e.path === activePath);
+
+            if (item) {
+              this.clickItem(item);
+            }
+          }, 300);
+        },
       };
     };
   </script>

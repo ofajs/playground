@@ -53,6 +53,10 @@
       height: 2px;
       background-color: var(--md-sys-color-normal);
     }
+    .close-btn {
+      display: inline-block;
+      min-width: 20px;
+    }
   </style>
   <div class="container">
     <o-fill :value="tabs">
@@ -67,6 +71,7 @@
           size="mini"
           icon
           variant="text"
+          class="close-btn"
           on:click="$host.closeTab($index,$event)"
         >
           <n-icon icon="material-symbols:close-rounded"></n-icon>

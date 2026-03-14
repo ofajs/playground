@@ -10,13 +10,9 @@
   <o-code :path="projectPath"></o-code>
   <script>
     export default async ({ load, query }) => {
-      console.log("query: ", query);
-
       return {
         data: {
-          projectPath:
-            "nos-demo-case/b20e63071106d2801d9f60cc766d8b2045657ff951f4a624b43fc28c619586e0", // 项目路径
-          // projectPath: "nos-4.0.13"
+          projectPath: "", // 项目路径
         },
         attached() {
           // 从 searchParams 中获取 hash
