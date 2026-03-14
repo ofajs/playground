@@ -63,6 +63,7 @@
           activePath: "", // 激活路径
           isError: false,
           errorPath: "",
+          _fileHistoryContent: {},
         },
         watch: {
           async activePath(path) {
@@ -87,11 +88,12 @@
 
             await this._initok;
 
-            // if (this.path !== path) {
-            //   return;
-            // }
+            this._editor.switchState(path); // 直接切换到该路径
 
-            this._editor.setValue(content);
+            if (!this._fileHistoryContent[path]) {
+              this._editor.setValue(content);
+              // this._editor.setValue(this._fileHistoryContent[path]); // 切换 state 后，自动会切换到对应的值
+            }
 
             // 根据后缀设置语言
             const fileName = handle.name;
@@ -109,12 +111,20 @@
             debugger;
           },
           contentChange(e) {
-            const provider = this.getProvider("o-code");
-            provider.dispatch("content-change", {
-              data: {
-                path: this.activePath,
-              },
-            });
+            // 记录历史
+            clearTimeout(this._changeTimer);
+            this._changeTimer = setTimeout(async () => {
+              const code = await this.shadow.$("monaco-editor").getValue();
+
+              const provider = this.getProvider("o-code");
+              provider.dispatch("content-change", {
+                data: {
+                  path: this.activePath,
+                },
+              });
+
+              this._fileHistoryContent[this.activePath] = code;
+            }, 100);
           },
           initOK() {
             if (this._init_resolve) {
