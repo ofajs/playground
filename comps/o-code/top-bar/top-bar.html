@@ -82,6 +82,7 @@
           clickPreviewBtn() {
             const provider = this.getProvider("o-code");
             provider.emit("click-preview-btn");
+            provider.dispatch("click-preview-btn");
           },
           clickSidebarBtn() {
             const provider = this.getProvider("o-code");
