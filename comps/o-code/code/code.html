@@ -90,10 +90,15 @@
 
             this._editor.switchState(path); // 直接切换到该路径
 
+            const tabs = this.tabs;
+
+            const targetTab = tabs.find((tab) => tab.path === path);
+
+            // 没有历史记录，且没有对应的tab，设置值
             if (!this._fileHistoryContent[path]) {
               this._editor.setValue(content);
-              // this._editor.setValue(this._fileHistoryContent[path]); // 切换 state 后，自动会切换到对应的值
             }
+            // this._editor.setValue(this._fileHistoryContent[path]); // 切换 state 后，自动会切换到对应的值
 
             // 根据后缀设置语言
             const fileName = handle.name;
@@ -104,9 +109,14 @@
             }
 
             this._editor.setLanguage(language);
+            this._editor.focus();
           },
         },
         proto: {
+          get tabs() {
+            const tabsPage = this.host.shadow.$(`o-page[src*="/tabs.html"]`);
+            return tabsPage ? tabsPage.tabs.slice() : [];
+          },
           save(e) {
             debugger;
           },

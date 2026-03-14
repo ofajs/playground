@@ -130,6 +130,10 @@
           },
         },
         proto: {
+          get fileHistoryContent() {
+            const codePage = this.host.shadow.$(`o-page[src*="/code.html"]`);
+            return codePage ? codePage._fileHistoryContent : {};
+          },
           contentChange(e) {
             const { path } = e.data;
 
@@ -142,6 +146,9 @@
             if (targetTab.italic) {
               targetTab.italic = false;
             }
+
+            // 判断是否有数据改动，有的话填充星星
+            console.log("contentChange: ", path, this.fileHistoryContent[path]);
           },
           clickTab(tab) {
             const provider = this.getProvider("o-code");
