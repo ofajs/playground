@@ -49,6 +49,8 @@
   <monaco-editor
     plugins="prettier"
     on:initialized="initOK"
+    on:save="save"
+    on:change="contentChange"
     style="height: 100%; width: 100%"
   ></monaco-editor>
   <o-consumer name="o-code" watch:active-path="activePath"></o-consumer>
@@ -103,6 +105,17 @@
           },
         },
         proto: {
+          save(e) {
+            debugger;
+          },
+          contentChange(e) {
+            const provider = this.getProvider("o-code");
+            provider.dispatch("content-change", {
+              data: {
+                path: this.activePath,
+              },
+            });
+          },
           initOK() {
             if (this._init_resolve) {
               this._init_resolve();

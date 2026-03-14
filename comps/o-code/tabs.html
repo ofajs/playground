@@ -103,6 +103,7 @@
     watch:project-handle-path="projectPath"
     on:click-item="clickItem"
     on:dblclick-item="dblclickItem"
+    on:content-change="contentChange"
   ></o-consumer>
   <script>
     export default async () => {
@@ -129,6 +130,19 @@
           },
         },
         proto: {
+          contentChange(e) {
+            const { path } = e.data;
+
+            const targetTab = this.tabs.find((tab) => tab.path === path);
+
+            if (!targetTab) {
+              return;
+            }
+
+            if (targetTab.italic) {
+              targetTab.italic = false;
+            }
+          },
           clickTab(tab) {
             const provider = this.getProvider("o-code");
             provider.activePath = tab.path;
