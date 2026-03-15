@@ -117,8 +117,23 @@
             const tabsPage = this.host.shadow.$(`o-page[src*="/tabs.html"]`);
             return tabsPage ? tabsPage.tabs.slice() : [];
           },
-          save(e) {
-            debugger;
+          async save(e) {
+            const code = await this.shadow.$("monaco-editor").getValue();
+            const handle = await get(this.activePath);
+            const originContent = await handle.text();
+            // 如果没有改动，不保存
+            if (originContent === code) {
+              return;
+            }
+
+            await handle.write(code);
+
+            const provider = this.getProvider("o-code");
+            provider.dispatch("save-content", {
+              data: {
+                path: this.activePath,
+              },
+            });
           },
           contentChange(e) {
             // 记录历史
