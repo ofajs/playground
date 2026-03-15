@@ -125,6 +125,7 @@
             clearTimeout(this._changeTimer);
             this._changeTimer = setTimeout(async () => {
               const code = await this.shadow.$("monaco-editor").getValue();
+              this._fileHistoryContent[this.activePath] = code;
 
               const provider = this.getProvider("o-code");
               provider.dispatch("content-change", {
@@ -132,8 +133,6 @@
                   path: this.activePath,
                 },
               });
-
-              this._fileHistoryContent[this.activePath] = code;
             }, 100);
           },
           initOK() {

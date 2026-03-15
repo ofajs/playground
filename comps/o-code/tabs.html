@@ -90,6 +90,7 @@
         class:active="$host.activePath === $data.path"
       >
         {{ $data.name }}
+        <o-if :value="$data.hasChange">*</o-if>
         <div class="close-btn" on:click="$host.closeTab($index,$event)">
           <n-icon icon="material-symbols:close-rounded"></n-icon>
         </div>
@@ -106,7 +107,9 @@
     on:content-change="contentChange"
   ></o-consumer>
   <script>
-    export default async () => {
+    export default async ({ load }) => {
+      const { get } = await load("/nos/fs/main.js");
+
       return {
         data: {
           activePath: "",
@@ -121,7 +124,14 @@
 
             sessionStorage.setItem(
               "tabs_" + this.projectPath,
-              JSON.stringify(this.tabs),
+              JSON.stringify(
+                this.tabs.map((e) => {
+                  return {
+                    ...e,
+                    hasChange: undefined,
+                  };
+                }),
+              ),
             );
           },
           projectPath(path) {
@@ -134,7 +144,7 @@
             const codePage = this.host.shadow.$(`o-page[src*="/code.html"]`);
             return codePage ? codePage._fileHistoryContent : {};
           },
-          contentChange(e) {
+          async contentChange(e) {
             const { path } = e.data;
 
             const targetTab = this.tabs.find((tab) => tab.path === path);
@@ -144,11 +154,18 @@
             }
 
             if (targetTab.italic) {
+              // 改动后要取消斜体模式
               targetTab.italic = false;
             }
 
-            // 判断是否有数据改动，有的话填充星星
-            console.log("contentChange: ", path, this.fileHistoryContent[path]);
+            const originContent = await get(path).then((e) => e.text());
+
+            // 判断是否有改动历史，有的话添加*
+            if (this.fileHistoryContent[path] !== originContent) {
+              targetTab.hasChange = true;
+            } else {
+              targetTab.hasChange = false;
+            }
           },
           clickTab(tab) {
             const provider = this.getProvider("o-code");
