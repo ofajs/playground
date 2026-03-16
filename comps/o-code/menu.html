@@ -187,8 +187,10 @@
               return;
             }
 
+            let activeFileHandle = null;
+
             if (type === "file") {
-              await handle.get(result, {
+              activeFileHandle = await handle.get(result, {
                 create: "file",
               });
             } else {
@@ -203,6 +205,7 @@
             provider.dispatch("refresh-list", {
               data: {
                 path: handle.path,
+                activePath: activeFileHandle.path,
               },
             });
           },
@@ -255,6 +258,7 @@
               data: {
                 path: targetDirHandle.path,
                 fromPath: handle.parent.path,
+                activePath: handle.path,
               },
             });
           },
@@ -288,6 +292,7 @@
             provider.dispatch("refresh-list", {
               data: {
                 path: parentHandlePath,
+                removePath: handle.path,
               },
             });
           },

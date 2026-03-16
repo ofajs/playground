@@ -47,6 +47,7 @@
       on:click="$host.clickItem($data)"
       on:contextmenu="$host.openFileMenu($data,$event)"
       attr:collapse-childs="$data.expanded ? 'open' : 'close'"
+      attr:data-path="$data.path"
     >
       <handle-icon
         slot="prefix"
@@ -165,10 +166,21 @@
             });
           },
           async refreshList(e) {
-            const { path, fromPath } = e.data;
+            const { path, fromPath, activePath } = e.data;
+
+            const clickActiveItem = () => {
+              if (activePath) {
+                const targetItem = this.shadow.$(`[data-path="${activePath}"]`);
+                if (targetItem) {
+                  targetItem.ele.click();
+                }
+              }
+            };
 
             if (path === this.projectPath) {
-              this.loadProjectFiles();
+              await this.loadProjectFiles();
+
+              clickActiveItem();
               return;
             }
 
@@ -193,6 +205,8 @@
               const fromData = flattenedFiles.find((e) => e.path === fromPath);
               await loadFiles(fromData, fromPath, this.projectPath);
             }
+
+            clickActiveItem();
           },
           openFileMenu(item, event) {
             event.preventDefault();

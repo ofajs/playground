@@ -106,6 +106,7 @@
     on:dblclick-item="dblclickItem"
     on:content-change="contentChange"
     on:save-content="contentChange"
+    on:refresh-list="refreshList"
   ></o-consumer>
   <script>
     export default async ({ load }) => {
@@ -141,6 +142,30 @@
           },
         },
         proto: {
+          refreshList(e) {
+            const { removePath } = e.data;
+
+            if (removePath) {
+              const index = this.tabs.findIndex(
+                (tab) => tab.path === removePath,
+              );
+
+              const targetTab = this.tabs[index];
+
+              if (targetTab.path === this.activePath) {
+                // 如果是当前的激活的tab，则向下一个tab切换
+                const nextTab = this.tabs[index + 1] || this.tabs[index - 1];
+
+                const provider = this.getProvider("o-code");
+                provider.activePath = nextTab.path;
+              }
+
+              if (index !== -1) {
+                this.tabs.splice(index, 1);
+              }
+              return;
+            }
+          },
           get fileHistoryContent() {
             const codePage = this.host.shadow.$(`o-page[src*="/code.html"]`);
             return codePage ? codePage._fileHistoryContent : {};
