@@ -5,11 +5,21 @@
       padding: 0 1px;
       min-width: 60vh;
     }
+    .link-container {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      word-break: break-all;
+      max-width: 100%;
+    }
   </style>
   <p>你可以直接复制以下链接分享给他人</p>
-  <div>{{ shareLink }}</div>
+  <div class="link-container">{{ shareLink }}</div>
   <p-button variant="outlined" size="small" on:click="clickCopy">
     复制链接
+  </p-button>
+  <p-button variant="outlined" size="small" on:click="clickCopyWithMarkdown">
+    复制连接（Markdown格式）
   </p-button>
   <o-consumer
     name="o-code"
@@ -19,6 +29,7 @@
     export default async ({ load }) => {
       const { compress } = await load("../../util.js");
       const { get } = await load("/nos/fs/main.js");
+      const { toast } = await load("/gh/ofajs/Punch-UI/packages/util.js");
 
       return {
         data: {
@@ -27,7 +38,14 @@
         },
         proto: {
           async clickCopy() {
-            debugger;
+            await navigator.clipboard.writeText(this.shareLink);
+            toast("复制成功");
+          },
+          async clickCopyWithMarkdown() {
+            await navigator.clipboard.writeText(
+              `[代码链接](${this.shareLink})`,
+            );
+            toast("复制成功");
           },
           async loadCode() {
             // 获取项目文件
