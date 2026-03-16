@@ -3,6 +3,9 @@
   <style>
     :host {
       display: block;
+    }
+
+    .container {
       padding: 0 1px;
       max-width: 60vw;
       min-width: 40vw;
@@ -25,7 +28,7 @@
   </style>
   <p-dialog :open="open" on:click-mask="open = false">
     <div slot="title">分享代码</div>
-    <div style="padding-left: 1px">
+    <div class="container">
       <p>你可以直接复制以下链接分享给他人</p>
       <div class="link-container">{{ shareLink }}</div>
       <p-button

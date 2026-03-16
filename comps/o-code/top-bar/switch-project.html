@@ -1,0 +1,22 @@
+<template page>
+  <l-m src="/gh/ofajs/Punch-UI/packages/dialog/dialog.html"></l-m>
+  <style>
+    :host {
+      display: block;
+    }
+    .container{}
+  </style>
+
+  <p-dialog>
+    <div class="container"></div>
+  </p-dialog>
+  <script>
+    export default async ({ load }) => {
+      return {
+        data: {},
+        proto: {},
+        attached() {},
+      };
+    };
+  </script>
+</template>
