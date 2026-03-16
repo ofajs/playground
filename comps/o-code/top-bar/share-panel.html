@@ -1,0 +1,68 @@
+<template page>
+  <style>
+    :host {
+      display: block;
+      padding: 0 1px;
+      min-width: 60vh;
+    }
+  </style>
+  <p>你可以直接复制以下链接分享给他人</p>
+  <div>{{ shareLink }}</div>
+  <p-button variant="outlined" size="small" on:click="clickCopy">
+    复制链接
+  </p-button>
+  <o-consumer
+    name="o-code"
+    watch:project-handle-path="projectPath"
+  ></o-consumer>
+  <script>
+    export default async ({ load }) => {
+      const { compress } = await load("../../util.js");
+      const { get } = await load("/nos/fs/main.js");
+
+      return {
+        data: {
+          shareLink: "",
+          projectPath: "",
+        },
+        proto: {
+          async clickCopy() {
+            debugger;
+          },
+          async loadCode() {
+            // 获取项目文件
+            const projectHandle = await get(this.projectPath);
+
+            const files = [];
+            for await (let handle of projectHandle.values()) {
+              if (handle.name === "node_modules") {
+                continue;
+              }
+
+              if (handle.kind === "file") {
+                const content = await handle.text();
+
+                files.push({
+                  p: handle.path.replace(this.projectPath + "/", ""),
+                  c: content,
+                });
+              }
+            }
+
+            const data = {
+              files,
+              active: files[0].p,
+            };
+
+            const compressedStr = await compress(JSON.stringify(data));
+
+            this.shareLink = `https://playground.ofajs.com/code/w.html?d=${compressedStr}`;
+          },
+        },
+        attached() {
+          this.loadCode();
+        },
+      };
+    };
+  </script>
+</template>

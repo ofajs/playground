@@ -71,7 +71,11 @@
     下载项目
   </p-button>
 
-  <p-button size="small" style="margin-right: 16px">
+  <p-button
+    size="small"
+    on:click="openDialog = true"
+    style="margin-right: 16px"
+  >
     <n-icon icon="ic:twotone-share" slot="prefix"></n-icon>
     发布
   </p-button>
@@ -80,6 +84,11 @@
     name="o-code"
     watch:project-handle-path="projectPath"
   ></o-consumer>
+
+  <p-dialog :open="openDialog" on:click-mask="openDialog = false">
+    <div slot="title">分享代码</div>
+    <o-page src="./share-panel.html"></o-page>
+  </p-dialog>
 
   <script>
     export default async ({ load }) => {
@@ -93,6 +102,7 @@
       return {
         data: {
           projectPath: null,
+          openDialog: true,
         },
         proto: {
           async clickRestoreBtn() {
