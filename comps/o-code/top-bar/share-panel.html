@@ -3,7 +3,8 @@
     :host {
       display: block;
       padding: 0 1px;
-      min-width: 60vw;
+      max-width: 60vw;
+      min-width: 40vw;
       cursor: default;
     }
     .link-container {
@@ -19,12 +20,30 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    p {
+      margin: 8px 0;
+    }
   </style>
   <p>你可以直接复制以下链接分享给他人</p>
   <div class="link-container">{{ shareLink }}</div>
   <p-button variant="outlined" size="small" on:click="clickCopy">
     复制链接
   </p-button>
+  <o-if :value="tooLarge">
+    <div style="color: var(--md-sys-color-error)">
+      <p>
+        项目代码大小为 {{ compressedSize }} 字节，已超过 8 KB，分享可能失败。
+      </p>
+      <p>
+        项目数据并非存储在云端，而是通过 URL
+        传递。受浏览器地址长度限制，内容过长可能导致分享失败。
+      </p>
+      <p>
+        如需反馈 Bug，建议先将示例精简至 8
+        KB以下；或直接下载项目压缩包并分享文件。
+      </p>
+    </div>
+  </o-if>
   <o-consumer
     name="o-code"
     watch:project-handle-path="projectPath"
@@ -40,6 +59,8 @@
           shareLink: "",
           projectPath: "",
           open: null,
+          tooLarge: false,
+          compressedSize: 0,
         },
         watch: {
           open(open) {
@@ -86,13 +107,17 @@
               origin = location.origin;
             }
 
-            // this.shareLink = `${origin}/code/w.html?d=${compressedStr}`;
+            // 大于 8kb，提醒可能会分享失败
+            // if (compressedStr.length > 8192 - 100) {
+            // toast("项目代码大小超过 8kb，可能会分享失败");
+            this.tooLarge = true;
+            this.compressedSize = compressedStr.length;
+            // }
+
             this.shareLink = `${origin}/?redirect=w&d=${compressedStr}`;
           },
         },
-        attached() {
-          this.loadCode();
-        },
+        attached() {},
       };
     };
   </script>
