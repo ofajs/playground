@@ -4,6 +4,7 @@
       display: block;
       padding: 0 1px;
       min-width: 60vw;
+      cursor: default;
     }
     .link-container {
       background: var(--md-sys-color-surface);
@@ -24,9 +25,6 @@
   <p-button variant="outlined" size="small" on:click="clickCopy">
     复制链接
   </p-button>
-  <p-button variant="outlined" size="small" on:click="clickCopyWithMarkdown">
-    复制连接（Markdown格式）
-  </p-button>
   <o-consumer
     name="o-code"
     watch:project-handle-path="projectPath"
@@ -45,12 +43,6 @@
         proto: {
           async clickCopy() {
             await navigator.clipboard.writeText(this.shareLink);
-            toast("复制成功");
-          },
-          async clickCopyWithMarkdown() {
-            await navigator.clipboard.writeText(
-              `[代码链接](${this.shareLink})`,
-            );
             toast("复制成功");
           },
           async loadCode() {
@@ -80,7 +72,13 @@
 
             const compressedStr = await compress(JSON.stringify(data));
 
-            this.shareLink = `https://playground.ofajs.com/code/w.html?d=${compressedStr}`;
+            let origin = "https://playground.ofajs.com";
+
+            if (location.origin.includes("localhost")) {
+              origin = location.origin;
+            }
+
+            this.shareLink = `${origin}/code/w.html?d=${compressedStr}`;
           },
         },
         attached() {
