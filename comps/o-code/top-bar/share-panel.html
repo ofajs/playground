@@ -39,6 +39,14 @@
         data: {
           shareLink: "",
           projectPath: "",
+          open: null,
+        },
+        watch: {
+          open(open) {
+            if (open) {
+              this.loadCode();
+            }
+          },
         },
         proto: {
           async clickCopy() {

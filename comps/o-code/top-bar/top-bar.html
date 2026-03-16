@@ -87,7 +87,7 @@
 
   <p-dialog :open="openDialog" on:click-mask="openDialog = false">
     <div slot="title">分享代码</div>
-    <o-page src="./share-panel.html"></o-page>
+    <o-page src="./share-panel.html" :open="openDialog"></o-page>
   </p-dialog>
 
   <script>
