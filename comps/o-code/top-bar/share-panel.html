@@ -20,9 +20,6 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    p {
-      margin: 8px 0;
-    }
   </style>
   <p>你可以直接复制以下链接分享给他人</p>
   <div class="link-container">{{ shareLink }}</div>
@@ -32,15 +29,8 @@
   <o-if :value="tooLarge">
     <div style="color: var(--md-sys-color-error)">
       <p>
-        项目代码大小为 {{ compressedSize }} 字节，已超过 8 KB，分享可能失败。
-      </p>
-      <p>
-        项目数据并非存储在云端，而是通过 URL
-        传递。受浏览器地址长度限制，内容过长可能导致分享失败。
-      </p>
-      <p>
-        如需反馈 Bug，建议先将示例精简至 8
-        KB以下；或直接下载项目压缩包并分享文件。
+        项目代码 {{ compressedSize }} 字节，已超过 8 KB，分享可能失败。
+        建议精简至 8 KB 以下，或下载项目压缩包分享。
       </p>
     </div>
   </o-if>
