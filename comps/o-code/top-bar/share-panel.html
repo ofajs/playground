@@ -1,4 +1,5 @@
 <template page>
+  <l-m src="/gh/ofajs/Punch-UI/packages/dialog/dialog.html"></l-m>
   <style>
     :host {
       display: block;
@@ -7,6 +8,7 @@
       min-width: 40vw;
       cursor: default;
     }
+
     .link-container {
       background: var(--md-sys-color-surface);
       border: 1px solid var(--md-sys-color-outline, #ccc);
@@ -21,19 +23,23 @@
       white-space: nowrap;
     }
   </style>
-  <p>你可以直接复制以下链接分享给他人</p>
-  <div class="link-container">{{ shareLink }}</div>
-  <p-button variant="outlined" size="small" on:click="clickCopy">
-    复制链接
-  </p-button>
-  <o-if :value="tooLarge">
-    <div style="color: var(--md-sys-color-error)">
-      <p>
-        项目代码 {{ compressedSize }} 字节，已超过 8 KB，分享可能失败。
-        建议精简至 8 KB 以下，或下载项目压缩包分享。
-      </p>
+  <p-dialog :open="open" on:click-mask="open = false">
+    <div slot="title">分享代码</div>
+    <div style="padding-left: 1px">
+      <p>你可以直接复制以下链接分享给他人</p>
+      <div class="link-container">{{ shareLink }}</div>
+      <p-button
+        variant="outlined"
+        size="small"
+        on:click="clickCopy"
+        attr:disabled="copied"
+        attr:color="copied ? 'success' : 'primary'"
+      >
+        <o-if :value="!copied"> 复制链接 </o-if>
+        <o-else> 已复制 </o-else>
+      </p-button>
     </div>
-  </o-if>
+  </p-dialog>
   <o-consumer
     name="o-code"
     watch:project-handle-path="projectPath"
@@ -51,6 +57,7 @@
           open: null,
           tooLarge: false,
           compressedSize: 0,
+          copied: false,
         },
         watch: {
           open(open) {
@@ -62,7 +69,10 @@
         proto: {
           async clickCopy() {
             await navigator.clipboard.writeText(this.shareLink);
-            toast("复制成功");
+            this.copied = true;
+            setTimeout(() => {
+              this.copied = false;
+            }, 1000);
           },
           async loadCode() {
             // 获取项目文件

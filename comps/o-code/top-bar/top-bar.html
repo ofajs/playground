@@ -1,6 +1,5 @@
 <template page>
   <l-m src="/gh/ofajs/Punch-UI/packages/wave/wave.html"></l-m>
-  <l-m src="/gh/ofajs/Punch-UI/packages/dialog/dialog.html"></l-m>
   <style>
     :host {
       display: flex;
@@ -86,10 +85,7 @@
     watch:project-handle-path="projectPath"
   ></o-consumer>
 
-  <p-dialog :open="openDialog" on:click-mask="openDialog = false">
-    <div slot="title">分享代码</div>
-    <o-page src="./share-panel.html" :open="openDialog"></o-page>
-  </p-dialog>
+  <o-page src="./share-panel.html" sync:open="openDialog" style="position: absolute;"></o-page>
 
   <script>
     export default async ({ load }) => {
