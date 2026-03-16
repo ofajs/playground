@@ -86,7 +86,8 @@
               origin = location.origin;
             }
 
-            this.shareLink = `${origin}/code/w.html?d=${compressedStr}`;
+            // this.shareLink = `${origin}/code/w.html?d=${compressedStr}`;
+            this.shareLink = `${origin}/?redirect=w&d=${compressedStr}`;
           },
         },
         attached() {

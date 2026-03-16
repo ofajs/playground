@@ -23,6 +23,21 @@
   <body>
     <script type="module">
       const load = lm(import.meta);
+
+      $("nos-version").on("installed", () => {
+        // 判断并重定向
+        const params = new URLSearchParams(location.search);
+        const redirect = params.get("redirect");
+        if (redirect === "w") {
+          const data = params.get("d");
+          if (!data) {
+            return;
+          }
+
+          location.href = `./code/w.html?d=${data}`;
+        }
+      });
+
       await load("https://core.noneos.com/nos-tool/comps/nos-version.html");
     </script>
   </body>
