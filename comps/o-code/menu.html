@@ -41,17 +41,21 @@
   </style>
   <div class="mask" on:click="openMenu = false" class:hide="!openMenu"></div>
   <!-- 专门用于处理菜单的 -->
-  <o-consumer name="o-code" on:open-file-menu="openFileMenu"></o-consumer>
+  <o-consumer
+    name="o-code"
+    on:open-file-menu="openFileMenu"
+    watch:project-handle-path="projectPath"
+  ></o-consumer>
   <p-menu class="main-menu" attr:open="openMenu ? 'on' : 'off'">
     <!-- <p-menu-item>
       <n-icon icon="lets-icons:view" slot="prefix"></n-icon>
       预览
     </p-menu-item> -->
-    <p-menu-item on:click="openFile">
+    <p-menu-item on:click="openFile" class:hide="projectPath === path">
       <n-icon icon="majesticons:open-line" slot="prefix"></n-icon>
       外部打开
     </p-menu-item>
-    <hr />
+    <hr class:hide="projectPath === path" />
     <p-menu-item on:click="createItem('file')">
       <n-icon icon="iconamoon:file-add" slot="prefix"></n-icon>
       创建文件
@@ -63,16 +67,16 @@
       ></n-icon>
       创建目录
     </p-menu-item>
-    <p-menu-item on:click="renameItem">
+    <p-menu-item on:click="renameItem" class:hide="projectPath === path">
       <n-icon icon="boxicons:rename" slot="prefix"></n-icon>
       重命名
     </p-menu-item>
     <hr />
-    <p-menu-item on:click="cutFile">
+    <p-menu-item on:click="cutFile" class:hide="projectPath === path">
       <n-icon icon="boxicons:cut" slot="prefix"></n-icon>
       剪切
     </p-menu-item>
-    <p-menu-item on:click="copyFile">
+    <p-menu-item on:click="copyFile" class:hide="projectPath === path">
       <n-icon icon="boxicons:copy" slot="prefix"></n-icon>
       复制
     </p-menu-item>
@@ -80,8 +84,8 @@
       <n-icon icon="boxicons:paste" slot="prefix"></n-icon>
       粘贴
     </p-menu-item>
-    <hr />
-    <p-menu-item on:click="deleteFile">
+    <hr class:hide="projectPath === path" />
+    <p-menu-item on:click="deleteFile" class:hide="projectPath === path">
       <n-icon icon="material-symbols:delete-outline" slot="prefix"></n-icon>
       删除
     </p-menu-item>
@@ -97,10 +101,23 @@
         data: {
           openMenu: false,
           path: null,
+          projectPath: null,
           inCut: "", // 等待剪切文件或目录
           inCopy: "", // 等待复制文件或目录
         },
         proto: {
+          openFileMenu(e) {
+            const { path, kind, clientX, clientY } = e.data;
+
+            this.path = path;
+
+            const menu = this.shadow.$(".main-menu");
+
+            this.openMenu = true;
+
+            menu.style.left = `${clientX}px`;
+            menu.style.top = `${clientY}px`;
+          },
           async renameItem() {
             this.openMenu = false;
 
@@ -246,18 +263,6 @@
               window.open(`/$${this.path}`);
             }
             this.openMenu = false;
-          },
-          openFileMenu(e) {
-            const { path, kind, clientX, clientY } = e.data;
-
-            this.path = path;
-
-            const menu = this.shadow.$(".main-menu");
-
-            this.openMenu = true;
-
-            menu.style.left = `${clientX}px`;
-            menu.style.top = `${clientY}px`;
           },
           async deleteFile() {
             this.openMenu = false;

@@ -98,11 +98,11 @@
             }
 
             // 大于 8kb，提醒可能会分享失败
-            // if (compressedStr.length > 8192 - 100) {
-            // toast("项目代码大小超过 8kb，可能会分享失败");
-            this.tooLarge = true;
-            this.compressedSize = compressedStr.length;
-            // }
+            if (compressedStr.length > 8192 - 100) {
+              // toast("项目代码大小超过 8kb，可能会分享失败");
+              this.tooLarge = true;
+              this.compressedSize = compressedStr.length;
+            }
 
             this.shareLink = `${origin}/?redirect=w&d=${compressedStr}`;
           },
