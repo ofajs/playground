@@ -11,12 +11,13 @@
       box-sizing: border-box;
       padding: 6px;
       width: 100%;
+      min-height: 80vh;
     }
     p-list-item {
       border-radius: 6px;
     }
   </style>
-  <p-list class="main-list">
+  <p-list class="main-list" on:contextmenu="outerContextMenu">
     <p-list-item>
       <b style="font-size: 12px">文件</b>
       <p-button
@@ -146,6 +147,23 @@
           },
         },
         proto: {
+          async outerContextMenu(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const provider = this.getProvider("o-code");
+
+            provider.dispatch("open-file-menu", {
+              data: {
+                path: this.projectPath,
+                clientX: event.clientX,
+                clientY: event.clientY,
+                screenX: event.screenX,
+                screenY: event.screenY,
+                originEvent: event,
+              },
+            });
+          },
           async refreshList(e) {
             const { path, fromPath } = e.data;
 
