@@ -1,4 +1,6 @@
 <template page>
+  <l-m src="/gh/ofajs/Punch-UI/packages/input/input.html"></l-m>
+  <l-m src="/gh/ofajs/Punch-UI/packages/button/button.html"></l-m>
   <l-m src="/gh/ofajs/Punch-UI/packages/dialog/dialog.html"></l-m>
   <l-m src="/gh/ofajs/Punch-UI/packages/list/list.html"></l-m>
   <style>
@@ -16,8 +18,12 @@
       cursor: default;
     }
 
+    h4 {
+      margin: 8px 0;
+    }
+
     p-list-item {
-      border-radius: 20px;
+      border-radius: 30px;
       margin: 2px 0;
     }
     p-list-item[active-item] {
@@ -32,8 +38,27 @@
   </style>
 
   <p-dialog :open="open" on:click-mask="open = false">
-    <div slot="title">切换项目</div>
+    <div slot="title">创建/切换项目</div>
     <div class="container">
+      <h4>创建项目</h4>
+      <div style="padding: 8px 0 16px 0; display: flex; align-items: center">
+        <p-input
+          attr:disabled="creating"
+          sync:value="newProjectName"
+          style="flex: 1"
+        >
+          <label> 输入新项目名称 </label>
+        </p-input>
+        <p-button
+          attr:disabled="!newProjectName || creating"
+          style="margin-left: 8px"
+          on:click="createProject"
+        >
+          <n-icon icon="material-symbols:add-rounded" slot="prefix"></n-icon>
+          确认创建
+        </p-button>
+      </div>
+      <h4>已有的项目</h4>
       <p-list style="max-height: 40vh; overflow-y: auto">
         <o-fill :value="list">
           <p-list-item
@@ -93,8 +118,15 @@
           open: false,
           list: [],
           projectPath: "",
+          newProjectName: "",
+          creating: false,
         },
         proto: {
+          async createProject() {
+            this.creating = true;
+
+            debugger;
+          },
           async deleteProject(item, event) {
             event.stopPropagation();
             event.preventDefault();

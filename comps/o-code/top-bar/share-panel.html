@@ -38,8 +38,11 @@
         attr:disabled="copied"
         attr:color="copied ? 'success' : 'primary'"
       >
-        <o-if :value="!copied"> 复制链接 </o-if>
-        <o-else> 已复制 </o-else>
+        <x-if :value="!copied"> 复制链接 </x-if>
+        <x-else>
+          <n-icon slot="prefix" icon="ix:success"></n-icon>
+          已复制
+        </x-else>
       </p-button>
     </div>
   </p-dialog>
