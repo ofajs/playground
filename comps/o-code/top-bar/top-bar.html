@@ -59,11 +59,6 @@
     预览
   </p-button>
 
-  <p-button size="small" on:click="clickRestoreBtn" variant="text">
-    <n-icon icon="ic:baseline-restore" slot="prefix"></n-icon>
-    还原项目代码
-  </p-button>
-
   <div style="flex: 1"></div>
 
   <p-button variant="outlined" size="small" on:click="clickDownloadBtn">
@@ -101,10 +96,6 @@
     export default async ({ load }) => {
       const { download } = await load("/nos/fs/download.js");
       const { get } = await load("/nos/fs/main.js");
-      const { confirm } = await load("/gh/ofajs/Punch-UI/packages/util.js");
-      const { resetProjectFile } = await load(
-        "../../../../code/util/reset-project-file.js",
-      );
 
       return {
         data: {
@@ -113,28 +104,6 @@
           openSwitchDialog: false,
         },
         proto: {
-          async clickRestoreBtn() {
-            const result = await confirm({
-              title: "还原代码",
-              message:
-                "确定要还原整个项目的代码吗？当前项目的代码将被覆盖，此操作无法撤销。",
-            });
-
-            if (!result) {
-              return;
-            }
-
-            const params = new URLSearchParams(location.search);
-            const hash = params.get("h");
-
-            // 读取对应hash的项目源文件
-            const originHandle = await get(`code-origins/${hash}.json`);
-            const originData = await originHandle.text();
-
-            await resetProjectFile(originData);
-
-            location.reload();
-          },
           clickPreviewBtn() {
             const provider = this.getProvider("o-code");
             provider.emit("click-preview-btn");

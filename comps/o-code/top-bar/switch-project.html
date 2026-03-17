@@ -71,6 +71,10 @@
   <script>
     export default async ({ load }) => {
       const { get } = await load("/nos/fs/main.js");
+      const { confirm } = await load("/gh/ofajs/Punch-UI/packages/util.js");
+      const { resetProjectFile } = await load(
+        "../../../../code/util/reset-project-file.js",
+      );
 
       return {
         data: {
@@ -79,12 +83,27 @@
           projectPath: "",
         },
         proto: {
-          restoreCode(item, event) {
+          async restoreCode(item, event) {
             event.stopPropagation();
             event.preventDefault();
 
-            // 还原代码
-            debugger;
+            const result = await confirm({
+              title: "还原代码",
+              message:
+                "确定要还原整个项目的代码吗？当前项目的代码将被覆盖，此操作无法撤销。",
+            });
+
+            if (!result) {
+              return;
+            }
+
+            const projectHash = item.path.split("/").pop();
+            const originHandle = await get(`code-origins/${projectHash}.json`);
+            const originData = await originHandle.text();
+
+            await resetProjectFile(originData);
+
+            location.reload();
           },
           selectOpt(item) {
             // 切换并跳转
