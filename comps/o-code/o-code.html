@@ -101,7 +101,7 @@
   <o-provider
     name="o-code"
     sync:active-path="activePath"
-    :project-handle-path="path"
+    :project-handle-path="projectPath"
     on:click-sidebar-btn="showSidebar = !showSidebar"
     on:click-preview-btn="showPreview = !showPreview"
   >
@@ -148,7 +148,7 @@
       return {
         tag: "o-code",
         attrs: {
-          path: null, // 项目地址
+          projectPath: null, // 项目地址
         },
         data: {
           showSidebar: true,
@@ -171,35 +171,35 @@
             this.resizeType = "sidebar";
             this.showResizeMask = true;
 
-            this._startX = event.clientX;
-            this._startWidth = parseInt(this.shadow.$(".left").css.width);
+            this._resizeStartX = event.clientX;
+            this._resizeStartWidth = parseInt(this.shadow.$(".left").css.width);
           },
           resizeStartPreview(event) {
             this.resizeType = "preview";
             this.showResizeMask = true;
 
-            this._startX = event.clientX;
-            this._startWidth = parseInt(
+            this._resizeStartX = event.clientX;
+            this._resizeStartWidth = parseInt(
               this.shadow.$(".preview-area").css.width,
             );
           },
           resizeMove(event) {
             if (this.resizeType === "sidebar") {
-              const diffX = event.clientX - this._startX;
-              const finalWidth = this._startWidth + diffX;
+              const diffX = event.clientX - this._resizeStartX;
+              const finalWidth = this._resizeStartWidth + diffX;
               this.shadow.$(".left").style.width = `${finalWidth}px`;
               this.shadow.$(".left .overflow-inner").style.width =
                 `${finalWidth}px`;
-              clearTimeout(this._resizeTimeout);
-              this._resizeTimeout = setTimeout(() => {
+              clearTimeout(this._resizeDebounceTimer);
+              this._resizeDebounceTimer = setTimeout(() => {
                 localStorage.playgroundCodeWidth = finalWidth;
               }, 300);
             } else if (this.resizeType === "preview") {
-              const diffX = event.clientX - this._startX;
-              const finalWidth = this._startWidth - diffX;
+              const diffX = event.clientX - this._resizeStartX;
+              const finalWidth = this._resizeStartWidth - diffX;
               this.shadow.$(".preview-area").style.flex = `0 0 ${finalWidth}px`;
-              clearTimeout(this._resizeTimeout);
-              this._resizeTimeout = setTimeout(() => {
+              clearTimeout(this._resizeDebounceTimer);
+              this._resizeDebounceTimer = setTimeout(() => {
                 localStorage.playgroundPreviewWidth = finalWidth;
               }, 300);
             }
