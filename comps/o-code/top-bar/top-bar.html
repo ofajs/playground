@@ -42,10 +42,29 @@
       height: 0;
       transition: all 0.2s ease-in-out;
     }
+
     .logo:hover .logo-sub-text {
       height: 12px;
       margin-top: 4px;
       opacity: 1;
+    }
+
+    .project-title {
+      margin-top: 4px;
+      font-size: 12px;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      opacity: 1;
+      color: var(--md-sys-color-primary);
+      transition: all 0.2s ease-in-out;
+      height: 12px;
+    }
+    .logo:hover .project-title {
+      margin-top: 0;
+      opacity: 0;
+      height: 0;
     }
     p-button {
       margin-left: 8px;
@@ -56,6 +75,7 @@
     <img src="./logo.svg" alt="logo" />
     <div class="logo-text-wrapper">
       <div class="logo-text">OFA Playground</div>
+      <div class="project-title">{{title}}</div>
       <span class="logo-sub-text">创建/切换项目</span>
     </div>
   </div>
@@ -103,6 +123,7 @@
   <o-page
     src="./switch-project.html"
     sync:open="openSwitchDialog"
+    on:update-title="updateTitle"
     style="position: absolute"
   ></o-page>
 
@@ -116,8 +137,12 @@
           projectPath: null,
           openShareDialog: false,
           openSwitchDialog: false,
+          title: "",
         },
         proto: {
+          updateTitle(e) {
+            this.title = e.data.title;
+          },
           clickPreviewBtn() {
             const provider = this.getProvider("o-code");
             provider.emit("click-preview-btn");

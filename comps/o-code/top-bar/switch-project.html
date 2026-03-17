@@ -210,9 +210,23 @@
             this.list = list;
             // this.list = await getProjectList();
           },
+          async updateTitle() {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            const item = this.shadow.$("p-list-item[active-item]");
+
+            if (item) {
+              $("title").text = item.text.trim();
+              this.emit("update-title", {
+                data: {
+                  title: item.text.trim(),
+                },
+              });
+            }
+          },
         },
-        attached() {
-          this.loadProject();
+        async attached() {
+          await this.loadProject();
+          this.updateTitle();
         },
       };
     };
