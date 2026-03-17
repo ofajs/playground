@@ -360,10 +360,14 @@
             const compressedStr = await compress(str);
 
             if (location.host.includes("localhost")) {
-              window.open(`/code/w.html?d=${compressedStr}`);
+              // window.open(`/code/w.html?d=${compressedStr}`);
+              window.open(`/?redirect=w&d=${compressedStr}`);
             } else {
+              // window.open(
+              //   `https://playground.ofajs.com/code/w.html?d=${compressedStr}`,
+              // );
               window.open(
-                `https://playground.ofajs.com/code/w.html?d=${compressedStr}`,
+                `https://playground.ofajs.com/?redirect=w&d=${compressedStr}`,
               );
             }
           },
