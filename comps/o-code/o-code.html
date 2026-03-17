@@ -155,12 +155,22 @@
           showPreview:
             sessionStorage.getItem("showPreview") === "false" ? false : true,
           showResizeMask: false,
-          activePath: sessionStorage.getItem("activePath") || "", // 激活路径
-          resizeType: null, // 'sidebar' | 'preview' | null
+          activePath: "",
+          resizeType: null,
         },
         watch: {
+          projectPath(projectPath) {
+            if (!projectPath) return;
+            this.activePath =
+              sessionStorage.getItem("activePath_" + projectPath) || "";
+          },
           activePath(activePath) {
-            sessionStorage.setItem("activePath", activePath);
+            if (this.projectPath) {
+              sessionStorage.setItem(
+                "activePath_" + this.projectPath,
+                activePath,
+              );
+            }
           },
           showPreview(showPreview) {
             sessionStorage.setItem("showPreview", showPreview);
