@@ -35,12 +35,38 @@
       margin-right: 8px;
       color: var(--md-sys-color-primary);
     }
+
+    .temp-item {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--md-sys-color-normal);
+      cursor: pointer;
+    }
+    .temp-item.active {
+      color: var(--md-sys-color-on-primary);
+      background-color: var(--md-sys-color-primary);
+      cursor: default;
+    }
   </style>
 
   <p-dialog :open="open" on:click-mask="open = false">
     <div slot="title">创建/切换项目</div>
     <div class="container">
       <h4>创建项目</h4>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0">
+        <o-fill :value="temps">
+          <div
+            class="temp-item"
+            class:active="$host.tempIndex === $index"
+            on:click="$host.tempIndex = $index"
+          >
+            {{$data.name}}
+          </div>
+        </o-fill>
+      </div>
       <div style="padding: 8px 0 16px 0; display: flex; align-items: center">
         <p-input
           attr:disabled="creating"
@@ -79,6 +105,7 @@
                 size="small"
                 variant="text"
                 on:click="$host.restoreCode($data,$event)"
+                title="Restore Code"
                 style="margin-left: 8px; z-index: 3"
               >
                 <n-icon icon="ic:round-restore"></n-icon>
@@ -106,12 +133,17 @@
     watch:project-handle-path="projectPath"
   ></o-consumer>
   <script>
-    export default async ({ load }) => {
+    export default async ({ load, url }) => {
       const { get } = await load("/nos/fs/main.js");
       const { confirm } = await load("/gh/ofajs/Punch-UI/packages/util.js");
       const { resetProjectFile } = await load(
         "../../../../code/util/reset-project-file.js",
       );
+
+      const resolve = (path) => {
+        const urlObj = new URL(path, url);
+        return urlObj.href;
+      };
 
       return {
         data: {
@@ -120,12 +152,65 @@
           projectPath: "",
           newProjectName: "",
           creating: false,
+          tempIndex: 0,
+          temps: [
+            {
+              name: "静态页面案例",
+              path: "../template/static",
+            },
+            {
+              name: "ofa.js页面模块案例",
+              path: "../template/page-case",
+            },
+          ],
         },
         proto: {
           async createProject() {
             this.creating = true;
 
-            debugger;
+            // 创建目录
+            const newProjectHandle = await get(
+              `code-projects/project-${Date.now()}`,
+              {
+                create: "dir",
+              },
+            );
+
+            const tempData = this.temps[this.tempIndex];
+
+            // 获取对应的文件
+            const fileJson = await fetch(
+              resolve(tempData.path + "/_files.json"),
+            ).then((e) => e.json());
+
+            const files = [];
+
+            for (let path of fileJson.files) {
+              const content = await fetch(
+                resolve(tempData.path + "/" + path),
+              ).then((e) => e.text());
+
+              // 开始写入文件
+              const handle = await newProjectHandle.get(path, {
+                create: "file",
+              });
+
+              await handle.write(content);
+            }
+
+            const pkgHandle = await newProjectHandle.get("package.json", {
+              create: "file",
+            });
+
+            await pkgHandle.write(
+              JSON.stringify({
+                name: this.newProjectName,
+              }),
+            );
+
+            this.selectOpt({
+              path: newProjectHandle.path,
+            });
           },
           async deleteProject(item, event) {
             event.stopPropagation();
