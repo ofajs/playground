@@ -26,23 +26,37 @@
       height: 24px;
     }
     .logo-text-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       margin-left: 6px;
       line-height: 0.76em;
     }
+
     .logo-sub-text {
+      display: inline-block;
       font-size: 10px;
       color: var(--md-sys-color-normal);
+      opacity: 0;
+      margin-top: 0;
+      height: 0;
+      transition: all 0.3s ease-in-out;
+    }
+    .logo:hover .logo-sub-text {
+      height: 12px;
+      margin-top: 4px;
+      opacity: 1;
     }
     p-button {
       margin-left: 8px;
     }
   </style>
   <div class="logo" on:click="openSwitchDialog = true">
-    <p-wave></p-wave>
+    <!-- <p-wave></p-wave> -->
     <img src="./logo.svg" alt="logo" />
     <div class="logo-text-wrapper">
       <div class="logo-text">OFA Playground</div>
-      <span class="logo-sub-text">切换项目</span>
+      <span class="logo-sub-text">创建/切换项目</span>
     </div>
   </div>
   <p-button
