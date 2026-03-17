@@ -28,7 +28,12 @@
         const originFile = await get(`code-origins/${projectHash}.json`, {
           create: "file",
         });
-        await originFile.write(projectJson);
+
+        // 添加时间
+        project.time = Date.now();
+
+        // 写入文件
+        await originFile.write(JSON.stringify(project));
 
         await resetProjectFile(projectJson);
 

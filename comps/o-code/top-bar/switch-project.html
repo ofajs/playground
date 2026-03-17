@@ -126,7 +126,7 @@
               try {
                 const pkgHandle = await item.get("package.json");
 
-                let name = item.name;
+                let name = null;
 
                 if (pkgHandle) {
                   const data = await pkgHandle.json();
@@ -138,6 +138,19 @@
                 const originHandle = await get(
                   `code-origins/${projectHash}.json`,
                 );
+
+                if (!name && originHandle) {
+                  const data = await originHandle.json();
+                  if (data.name) {
+                    name = data.name;
+                  } else if (data.time) {
+                    name = `case-${new Date(data.time).toLocaleString()}`;
+                  }
+                }
+
+                if (!name) {
+                  name = item.name;
+                }
 
                 list.push({
                   path: item.path,
