@@ -359,7 +359,7 @@
             // 利用原生api压缩内容
             const compressedStr = await compress(str);
 
-            if (location.host.includes("localhost")) {
+            if (location.host.includes("localhost:4002")) {
               // window.open(`/code/w.html?d=${compressedStr}`);
               window.open(`/?redirect=w&d=${compressedStr}`);
             } else {
