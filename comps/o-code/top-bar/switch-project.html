@@ -17,9 +17,16 @@
 
     p-list-item {
       border-radius: 20px;
+      margin: 2px 0;
     }
     p-list-item[active-item] {
       background-color: var(--md-sys-color-primary-container);
+    }
+
+    .icon {
+      font-size: 18px;
+      margin-right: 8px;
+      color: var(--md-sys-color-primary);
     }
   </style>
 
@@ -33,8 +40,24 @@
             button
             on:click="$host.selectOpt($data)"
           >
-            <n-icon icon="ix:project" slot="prefix"></n-icon>
+            <o-if :value="$data.fromPlayground" slot="prefix">
+              <n-icon icon="ci:code" class="icon"></n-icon>
+            </o-if>
+            <o-else slot="prefix">
+              <n-icon icon="ix:project" class="icon"></n-icon>
+            </o-else>
             {{$data.name}}
+            <o-if :value="$data.fromPlayground" slot="suffix">
+              <p-button
+                icon
+                size="small"
+                variant="text"
+                on:click="$host.restoreCode($data,$event)"
+                style="margin-left: 8px; z-index: 3"
+              >
+                <n-icon icon="ic:round-restore"></n-icon>
+              </p-button>
+            </o-if>
           </p-list-item>
         </o-fill>
       </p-list>
@@ -56,6 +79,13 @@
           projectPath: "",
         },
         proto: {
+          restoreCode(item, event) {
+            event.stopPropagation();
+            event.preventDefault();
+
+            // 还原代码
+            debugger;
+          },
           selectOpt(item) {
             // 切换并跳转
             this.open = false;
@@ -84,9 +114,16 @@
                   name = data.name;
                 }
 
+                const projectHash = item.path.split("/").pop();
+
+                const originHandle = await get(
+                  `code-origins/${projectHash}.json`,
+                );
+
                 list.push({
                   path: item.path,
                   name,
+                  fromPlayground: originHandle ? true : false,
                 });
               } catch (error) {
                 console.log(error);
