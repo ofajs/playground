@@ -26,7 +26,7 @@
   <p-dialog :open="open" on:click-mask="open = false">
     <div slot="title">切换项目</div>
     <div class="container">
-      <p-list>
+      <p-list style="max-height: 40vh; overflow-y: auto">
         <o-fill :value="list">
           <p-list-item
             attr:active-item="$host.projectPath === $data.path"
@@ -74,19 +74,23 @@
             const list = [];
 
             for await (let item of handle.values()) {
-              const pkgHandle = await item.get("package.json");
+              try {
+                const pkgHandle = await item.get("package.json");
 
-              let name = item.name;
+                let name = item.name;
 
-              if (pkgHandle) {
-                const data = await pkgHandle.json();
-                name = data.name;
+                if (pkgHandle) {
+                  const data = await pkgHandle.json();
+                  name = data.name;
+                }
+
+                list.push({
+                  path: item.path,
+                  name,
+                });
+              } catch (error) {
+                console.log(error);
               }
-
-              list.push({
-                path: item.path,
-                name,
-              });
             }
 
             this.list = list;
