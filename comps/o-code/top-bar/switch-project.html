@@ -5,6 +5,7 @@
     :host {
       display: block;
     }
+
     .container {
       padding: 0 1px;
       max-width: 60vw;
@@ -58,6 +59,17 @@
                 <n-icon icon="ic:round-restore"></n-icon>
               </p-button>
             </o-if>
+            <p-button
+              icon
+              size="small"
+              variant="text"
+              on:click="$host.deleteProject($data,$event)"
+              color="error"
+              slot="suffix"
+              style="margin-left: 8px; z-index: 3"
+            >
+              <n-icon icon="material-symbols:delete-outline"></n-icon>
+            </p-button>
           </p-list-item>
         </o-fill>
       </p-list>
@@ -83,6 +95,39 @@
           projectPath: "",
         },
         proto: {
+          async deleteProject(item, event) {
+            event.stopPropagation();
+            event.preventDefault();
+
+            const result = await confirm({
+              title: "删除项目",
+              message: `确定要删除项目 "${item.name}" 吗？此操作无法撤销。`,
+            });
+
+            if (!result) {
+              return;
+            }
+
+            const projectHash = item.path.split("/").pop();
+
+            try {
+              const projectHandle = await get(`code-projects/${projectHash}`);
+              if (projectHandle) {
+                await projectHandle.remove();
+              }
+
+              const originHandle = await get(
+                `code-origins/${projectHash}.json`,
+              );
+              if (originHandle) {
+                await originHandle.remove();
+              }
+
+              await this.loadProject();
+            } catch (error) {
+              console.error("删除项目失败:", error);
+            }
+          },
           async restoreCode(item, event) {
             event.stopPropagation();
             event.preventDefault();

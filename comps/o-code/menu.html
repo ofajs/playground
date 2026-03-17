@@ -205,7 +205,7 @@
             provider.dispatch("refresh-list", {
               data: {
                 path: handle.path,
-                activePath: activeFileHandle.path,
+                activePath: activeFileHandle ? activeFileHandle.path : null,
               },
             });
           },
@@ -271,9 +271,11 @@
           async deleteFile() {
             this.openMenu = false;
 
+            const path = this.path.split("/").slice(2).join("/");
+
             const result = await confirm({
               title: "删除确认",
-              message: `确定删除 ${this.path} 吗？该操作不可撤销`,
+              message: `确定删除 ${path} 吗？该操作不可撤销`,
             });
 
             if (!result) {

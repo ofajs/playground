@@ -152,7 +152,7 @@
 
               const targetTab = this.tabs[index];
 
-              if (targetTab.path === this.activePath) {
+              if (targetTab && targetTab.path === this.activePath) {
                 // 如果是当前的激活的tab，则向下一个tab切换
                 const nextTab = this.tabs[index + 1] || this.tabs[index - 1];
 
