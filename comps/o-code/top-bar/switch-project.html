@@ -106,6 +106,7 @@
                 variant="text"
                 on:click="$host.restoreCode($data,$event)"
                 title="Restore Code"
+                attr:disabled="$host.creating"
                 style="margin-left: 8px; z-index: 3"
               >
                 <n-icon icon="ic:round-restore"></n-icon>
@@ -118,6 +119,7 @@
               on:click="$host.deleteProject($data,$event)"
               color="error"
               slot="suffix"
+              attr:disabled="$host.creating || $host.projectPath === $data.path"
               style="margin-left: 8px; z-index: 3"
             >
               <n-icon icon="material-symbols:delete-outline"></n-icon>
