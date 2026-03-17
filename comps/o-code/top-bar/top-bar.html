@@ -37,7 +37,7 @@
       margin-left: 8px;
     }
   </style>
-  <div class="logo">
+  <div class="logo" on:click="openSwitchDialog = true">
     <p-wave></p-wave>
     <img src="./logo.svg" alt="logo" />
     <div class="logo-text-wrapper">
@@ -73,7 +73,7 @@
 
   <p-button
     size="small"
-    on:click="openDialog = true"
+    on:click="openShareDialog = true"
     style="margin-right: 16px"
   >
     <n-icon icon="ic:twotone-share" slot="prefix"></n-icon>
@@ -85,7 +85,17 @@
     watch:project-handle-path="projectPath"
   ></o-consumer>
 
-  <o-page src="./share-panel.html" sync:open="openDialog" style="position: absolute;"></o-page>
+  <o-page
+    src="./share-panel.html"
+    sync:open="openShareDialog"
+    style="position: absolute"
+  ></o-page>
+
+  <o-page
+    src="./switch-project.html"
+    sync:open="openSwitchDialog"
+    style="position: absolute"
+  ></o-page>
 
   <script>
     export default async ({ load }) => {
@@ -99,7 +109,8 @@
       return {
         data: {
           projectPath: null,
-          openDialog: false,
+          openShareDialog: false,
+          openSwitchDialog: false,
         },
         proto: {
           async clickRestoreBtn() {

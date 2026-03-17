@@ -1,21 +1,101 @@
 <template page>
   <l-m src="/gh/ofajs/Punch-UI/packages/dialog/dialog.html"></l-m>
+  <l-m src="/gh/ofajs/Punch-UI/packages/list/list.html"></l-m>
   <style>
     :host {
       display: block;
     }
-    .container{}
+    .container {
+      padding: 0 1px;
+      max-width: 60vw;
+      min-width: 40vw;
+      min-height: 40vh;
+      max-height: 80vh;
+      overflow: auto;
+      cursor: default;
+    }
+
+    p-list-item {
+      border-radius: 20px;
+    }
+    p-list-item[active-item] {
+      background-color: var(--md-sys-color-primary-container);
+    }
   </style>
 
-  <p-dialog>
-    <div class="container"></div>
+  <p-dialog :open="open" on:click-mask="open = false">
+    <div slot="title">切换项目</div>
+    <div class="container">
+      <p-list>
+        <o-fill :value="list">
+          <p-list-item
+            attr:active-item="$host.projectPath === $data.path"
+            button
+            on:click="$host.selectOpt($data)"
+          >
+            <n-icon icon="ix:project" slot="prefix"></n-icon>
+            {{$data.name}}
+          </p-list-item>
+        </o-fill>
+      </p-list>
+    </div>
   </p-dialog>
+
+  <o-consumer
+    name="o-code"
+    watch:project-handle-path="projectPath"
+  ></o-consumer>
   <script>
     export default async ({ load }) => {
+      const { get } = await load("/nos/fs/main.js");
+
       return {
-        data: {},
-        proto: {},
-        attached() {},
+        data: {
+          open: false,
+          list: [],
+          projectPath: "",
+        },
+        proto: {
+          selectOpt(item) {
+            // 切换并跳转
+            this.open = false;
+
+            const projectHash = item.path.split("/").pop();
+
+            location.href = `${location.origin + location.pathname}?h=${projectHash}`;
+          },
+          async loadProject() {
+            const handle = await get("code-projects");
+
+            if (!handle || handle.kind !== "dir") {
+              return;
+            }
+
+            const list = [];
+
+            for await (let item of handle.values()) {
+              const pkgHandle = await item.get("package.json");
+
+              let name = item.name;
+
+              if (pkgHandle) {
+                const data = await pkgHandle.json();
+                name = data.name;
+              }
+
+              list.push({
+                path: item.path,
+                name,
+              });
+            }
+
+            this.list = list;
+            // this.list = await getProjectList();
+          },
+        },
+        attached() {
+          this.loadProject();
+        },
       };
     };
   </script>
