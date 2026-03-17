@@ -203,9 +203,13 @@
             });
 
             await pkgHandle.write(
-              JSON.stringify({
-                name: this.newProjectName,
-              }),
+              JSON.stringify(
+                {
+                  name: this.newProjectName,
+                },
+                null,
+                2,
+              ),
             );
 
             this.selectOpt({
