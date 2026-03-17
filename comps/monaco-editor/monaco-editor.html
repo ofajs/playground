@@ -63,6 +63,8 @@
           async setValue(value) {
             await this._initialized;
 
+            this._previousSetValue = value;
+
             this._postMessage("setValue", { value });
           },
           async getValue() {
@@ -128,10 +130,13 @@
               event.data.type === "contentChange"
             ) {
               event.stopImmediatePropagation();
-              // 内容改变
-              this.emit("change", {
-                bubbles: false,
-              });
+
+              if (this._previousSetValue !== event.data.changes[0].text) {
+                // 内容改变
+                this.emit("change", {
+                  bubbles: false,
+                });
+              }
               return;
             }
 

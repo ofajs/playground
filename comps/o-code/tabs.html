@@ -1,0 +1,258 @@
+<template page>
+  <style>
+    :host {
+      display: block;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      box-sizing: border-box;
+      background-color: #1e1e1e;
+      --tab-border-color: rgba(from var(--md-sys-color-normal) r g b / 0.3);
+      border-bottom: 1px solid var(--tab-border-color);
+    }
+
+    .item {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      height: 40px;
+      line-height: 40px;
+      padding: 0 4px 0 12px;
+      border-left: 1px solid transparent;
+      border-right: 1px solid transparent;
+      border-bottom: 1px solid transparent;
+      cursor: pointer;
+      box-sizing: border-box;
+      font-size: 14px;
+      background-color: #1e1e1e;
+    }
+
+    .item:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 0px;
+      background-color: var(--tab-border-color);
+    }
+
+    .item.active {
+      height: 40px;
+      border-left: 1px solid var(--tab-border-color);
+      border-right: 1px solid var(--tab-border-color);
+      border-bottom: 1px solid #1e1e1e;
+    }
+
+    .item.italic {
+      font-style: italic;
+    }
+
+    .item.active:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--md-sys-color-normal);
+    }
+    .close-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      margin-left: 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: all 0.15s ease;
+    }
+
+    .close-btn:hover {
+      opacity: 1;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .close-btn:active {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+  </style>
+  <div class="container">
+    <o-fill :value="tabs">
+      <div
+        class="item"
+        class:italic="$data.italic"
+        on:click="$host.clickTab($data)"
+        class:active="$host.activePath === $data.path"
+      >
+        {{ $data.name }}
+        <o-if :value="$data.hasChange">*</o-if>
+        <div class="close-btn" on:click="$host.closeTab($index,$event)">
+          <n-icon icon="material-symbols:close-rounded"></n-icon>
+        </div>
+      </div>
+    </o-fill>
+  </div>
+
+  <o-consumer
+    name="o-code"
+    watch:active-path="activePath"
+    watch:project-handle-path="projectPath"
+    on:click-item="clickItem"
+    on:dblclick-item="dblclickItem"
+    on:content-change="contentChange"
+    on:save-content="contentChange"
+    on:refresh-list="refreshList"
+  ></o-consumer>
+  <script>
+    export default async ({ load }) => {
+      const { get } = await load("/nos/fs/main.js");
+
+      return {
+        data: {
+          activePath: "",
+          projectPath: "",
+          tabs: [],
+        },
+        watch: {
+          tabs(tabs) {
+            if (tabs.length === 0) {
+              return;
+            }
+
+            sessionStorage.setItem(
+              "tabs_" + this.projectPath,
+              JSON.stringify(
+                this.tabs.map((e) => {
+                  return {
+                    ...e,
+                    hasChange: undefined,
+                  };
+                }),
+              ),
+            );
+          },
+          projectPath(path) {
+            this.tabs =
+              JSON.parse(sessionStorage.getItem("tabs_" + path)) || [];
+          },
+        },
+        proto: {
+          refreshList(e) {
+            const { removePath } = e.data;
+
+            if (removePath) {
+              const index = this.tabs.findIndex(
+                (tab) => tab.path === removePath,
+              );
+
+              const targetTab = this.tabs[index];
+
+              if (targetTab && targetTab.path === this.activePath) {
+                // 如果是当前的激活的tab，则向下一个tab切换
+                const nextTab = this.tabs[index + 1] || this.tabs[index - 1];
+
+                const provider = this.getProvider("o-code");
+                provider.activePath = nextTab.path;
+              }
+
+              if (index !== -1) {
+                this.tabs.splice(index, 1);
+              }
+              return;
+            }
+          },
+          get fileHistoryContent() {
+            const codePage = this.host.shadow.$(`o-page[src*="/code.html"]`);
+            return codePage ? codePage._fileHistoryContent : {};
+          },
+          async contentChange(e) {
+            const { path } = e.data;
+
+            const targetTab = this.tabs.find((tab) => tab.path === path);
+
+            if (!targetTab) {
+              return;
+            }
+
+            if (targetTab.italic) {
+              // 改动后要取消斜体模式
+              targetTab.italic = false;
+            }
+
+            const originContent = await get(path).then((e) => e.text());
+
+            // 判断是否有改动历史，有的话添加*
+            if (this.fileHistoryContent[path] !== originContent) {
+              targetTab.hasChange = true;
+            } else {
+              targetTab.hasChange = false;
+            }
+          },
+          clickTab(tab) {
+            const provider = this.getProvider("o-code");
+            provider.activePath = tab.path;
+          },
+          closeTab(index, e) {
+            e.stopPropagation();
+            const tab = this.tabs[index];
+            this.tabs.splice(index, 1);
+
+            const provider = this.getProvider("o-code");
+
+            // 如果关闭的是当前激活的tab，且还有其他tab，切换到前一个或后一个tab
+            if (this.activePath === tab.path && this.tabs.length > 0) {
+              if (this.tabs[index]) {
+                provider.activePath = this.tabs[index].path;
+              } else if (this.tabs[index - 1]) {
+                provider.activePath = this.tabs[index - 1].path;
+              } else {
+                provider.activePath = this.tabs[0].path;
+              }
+            }
+          },
+          clickItem(e) {
+            const { path } = e.data;
+            console.log("clickItem: ", path);
+
+            if (this.tabs.some((tab) => tab.path === path)) {
+              return;
+            }
+
+            const italicTabIndex = this.tabs.findIndex((tab) => tab.italic);
+
+            if (italicTabIndex > -1) {
+              this.tabs.splice(italicTabIndex, 1);
+            }
+
+            this.tabs.push({
+              path,
+              name: path.split("/").pop(),
+              italic: true,
+            });
+          },
+          dblclickItem(e) {
+            const { path } = e.data;
+            console.log("dblclickItem: ", path);
+
+            const existingTab = this.tabs.find((tab) => tab.path === path);
+
+            if (existingTab) {
+              existingTab.italic = false;
+            } else {
+              this.tabs.push({
+                path,
+                name: path.split("/").pop(),
+                italic: false,
+              });
+            }
+          },
+        },
+      };
+    };
+  </script>
+</template>

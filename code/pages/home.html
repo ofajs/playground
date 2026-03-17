@@ -1,0 +1,28 @@
+<template page>
+  <style>
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <l-m src="../../comps/o-code/o-code.html"></l-m>
+  <o-code :project-path="projectPath"></o-code>
+  <script>
+    export default async ({ load, query }) => {
+      return {
+        data: {
+          projectPath: "", // 项目路径
+        },
+        attached() {
+          // 从 searchParams 中获取 hash
+          const searchParam = new URLSearchParams(window.location.search);
+          const hash = searchParam.get("h");
+          if (hash) {
+            this.projectPath = `code-projects/${hash}`;
+          }
+        },
+      };
+    };
+  </script>
+</template>

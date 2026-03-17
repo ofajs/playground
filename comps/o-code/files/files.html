@@ -1,0 +1,300 @@
+<template page>
+  <l-m src="/gh/ofajs/Punch-UI/packages/list/list.html"></l-m>
+  <l-m src="/gh/ofajs/Punch-UI/packages/button/button.html"></l-m>
+  <l-m src="/nos/n-icon/n-icon.html"></l-m>
+  <l-m src="./handle-icon.html"></l-m>
+  <style>
+    :host {
+      display: flex;
+    }
+    .main-list {
+      box-sizing: border-box;
+      padding: 6px;
+      width: 100%;
+      min-height: 80vh;
+    }
+    p-list-item {
+      border-radius: 6px;
+    }
+  </style>
+  <p-list class="main-list" on:contextmenu="outerContextMenu">
+    <p-list-item>
+      <b style="font-size: 12px">文件</b>
+      <p-button
+        size="mini"
+        slot="suffix"
+        icon
+        variant="text"
+        attr:disabled="reloading"
+        on:click="loadProjectFiles()"
+      >
+        <n-icon
+          icon="material-symbols:refresh"
+          style="font-size: 18px"
+        ></n-icon>
+      </p-button>
+      <p-list slot="childs" style="--ladder-left: 8px">
+        <o-fill :value="files" name="handle-item" fill-name="path"> </o-fill>
+      </p-list>
+    </p-list-item>
+  </p-list>
+
+  <template name="handle-item">
+    <p-list-item
+      button
+      attr:active-item="$host.activePath === $data.path"
+      on:dblclick="$host.dblclickItem($data,$event)"
+      on:click="$host.clickItem($data)"
+      on:contextmenu="$host.openFileMenu($data,$event)"
+      attr:collapse-childs="$data.expanded ? 'open' : 'close'"
+      attr:data-path="$data.path"
+    >
+      <handle-icon
+        slot="prefix"
+        :path="$data.path"
+        :kind="$data.kind"
+        :expanded="$data.expanded"
+      ></handle-icon>
+      {{$data.name}}
+
+      <x-if :value="$data.files && $data.files.length > 0">
+        <i toggle-collapse triangle slot="suffix"></i>
+      </x-if>
+
+      <p-list slot="childs">
+        <o-fill :value="$data.files" name="handle-item" fill-name="path">
+        </o-fill>
+      </p-list>
+    </p-list-item>
+  </template>
+  <o-consumer
+    name="o-code"
+    watch:active-path="activePath"
+    watch:project-handle-path="projectPath"
+    on:refresh-list="refreshList"
+  ></o-consumer>
+  <script>
+    export default async ({ load }) => {
+      const { get } = await load("/nos/fs/main.js");
+
+      const loadFiles = async (target, path, projectPath) => {
+        const handle = await get(path);
+
+        // target.files = [];
+
+        const files = [];
+
+        for await (let item of handle.values()) {
+          if (item.name === "node_modules") {
+            continue;
+          }
+
+          const obj = {
+            path: item.path,
+            kind: item.kind,
+            name: item.name,
+          };
+
+          if (item.kind === "dir") {
+            obj.expanded = getExpandedState(item.path, projectPath);
+          }
+
+          // target.files.push(obj);
+          files.push(obj);
+
+          if (item.kind === "dir") {
+            // 读取目录下的文件和子目录
+            await loadFiles(
+              // target.files.find((e) => e.path === item.path),
+              obj,
+              item.path,
+              projectPath,
+            );
+          }
+        }
+
+        target.files = files;
+      };
+
+      const getExpandedState = (path, projectPath) => {
+        const key = `files-expanded-${projectPath}`;
+        const state = JSON.parse(sessionStorage.getItem(key) || "{}");
+        return state[path] || false;
+      };
+
+      return {
+        data: {
+          activePath: "", // 激活路径
+          projectPath: "", // 项目地址
+          files: [
+            {
+              name: "App.jsx",
+              kind: "file",
+            },
+            {
+              name: "index.html",
+              kind: "file",
+            },
+          ],
+          reloading: false,
+        },
+        watch: {
+          projectPath(path) {
+            if (!path) {
+              return;
+            }
+
+            this.loadProjectFiles(path);
+          },
+        },
+        proto: {
+          async outerContextMenu(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const provider = this.getProvider("o-code");
+
+            provider.dispatch("open-file-menu", {
+              data: {
+                path: this.projectPath,
+                clientX: event.clientX,
+                clientY: event.clientY,
+                screenX: event.screenX,
+                screenY: event.screenY,
+                originEvent: event,
+              },
+            });
+          },
+          async refreshList(e) {
+            const { path, fromPath, activePath } = e.data;
+
+            const clickActiveItem = () => {
+              if (activePath) {
+                const targetItem = this.shadow.$(`[data-path="${activePath}"]`);
+                if (targetItem) {
+                  targetItem.ele.click();
+                }
+              }
+            };
+
+            if (path === this.projectPath) {
+              await this.loadProjectFiles();
+
+              clickActiveItem();
+              return;
+            }
+
+            // 只更新对应路径的数据
+            // 查找对应路径的文件或目录，先扁平化再查
+            // 递归扁平化多级文件树
+            const flatten = (list) =>
+              list.reduce((arr, item) => {
+                arr.push(item);
+                if (item.files && item.files.length) {
+                  arr.push(...flatten(item.files));
+                }
+                return arr;
+              }, []);
+
+            const flattenedFiles = flatten(this.files);
+
+            const data = flattenedFiles.find((e) => e.path === path);
+            await loadFiles(data, path, this.projectPath);
+
+            if (fromPath) {
+              const fromData = flattenedFiles.find((e) => e.path === fromPath);
+              await loadFiles(fromData, fromPath, this.projectPath);
+            }
+
+            clickActiveItem();
+          },
+          openFileMenu(item, event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const provider = this.getProvider("o-code");
+
+            provider.dispatch("open-file-menu", {
+              data: {
+                path: item.path,
+                kind: item.kind,
+                clientX: event.clientX,
+                clientY: event.clientY,
+                screenX: event.screenX,
+                screenY: event.screenY,
+                originItem: item,
+                originEvent: event,
+              },
+            });
+          },
+          saveExpandedState(item) {
+            const key = `files-expanded-${this.projectPath}`;
+            const state = JSON.parse(sessionStorage.getItem(key) || "{}");
+            state[item.path] = item.expanded;
+            sessionStorage.setItem(key, JSON.stringify(state));
+          },
+          clickItem(item) {
+            if (item.kind === "dir") {
+              item.expanded = !item.expanded;
+              this.saveExpandedState(item);
+              return;
+            }
+
+            const provider = this.getProvider("o-code");
+            provider.activePath = item.path;
+
+            provider.dispatch("click-item", {
+              data: {
+                path: item.path,
+              },
+            });
+          },
+          dblclickItem(item, event) {
+            event.stopPropagation();
+
+            if (item.kind === "dir") {
+              return;
+            }
+
+            const provider = this.getProvider("o-code");
+            provider.dispatch("dblclick-item", {
+              data: {
+                path: item.path,
+              },
+            });
+          },
+          async loadProjectFiles(path) {
+            this.reloading = true;
+            if (!path) {
+              path = this.projectPath;
+            }
+            await loadFiles(this, path, this.projectPath);
+            this.reloading = false;
+          },
+        },
+        attached() {
+          setTimeout(async () => {
+            // 查看是否没有tabs，没有的话点击项目中激活的项目
+            if (this.activePath) {
+              return;
+            }
+
+            const searchParam = new URLSearchParams(window.location.search);
+            const hash = searchParam.get("h");
+
+            const originHandle = await get(`code-origins/${hash}.json`);
+            const originData = await originHandle.json();
+
+            // 选中激活项目
+            const activePath = `${this.projectPath}/${originData.active}`;
+            const item = this.files.find((e) => e.path === activePath);
+
+            if (item) {
+              this.clickItem(item);
+            }
+          }, 300);
+        },
+      };
+    };
+  </script>
+</template>

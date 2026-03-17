@@ -243,9 +243,9 @@
           <div class="top-btn" on:click="handleReloadClick">
             <n-icon icon="mdi:reload"></n-icon>
           </div>
-          <a class="top-btn" attr:href="previewPath" target="_blank">
+          <div class="top-btn" on:click="handleOpenClick">
             <n-icon icon="majesticons:open"></n-icon>
-          </a>
+          </div>
         </o-if>
       </div>
       <div class="content">
@@ -314,6 +314,8 @@
         load(`${prefix}/nos/util/hash/get-hash.js`),
       ]);
 
+      const { compress, decompress } = await load("../util.js");
+
       return {
         tag: "o-playground",
         attrs: { already: "" },
@@ -338,6 +340,33 @@
           },
         },
         proto: {
+          async handleOpenClick() {
+            // 获取所有内容并精简，保存成一个对象
+            const data = await this.getFileContent();
+            const files = data.files.map((item) => ({
+              p: item.path,
+              c: item.content,
+            }));
+
+            const redata = {
+              active: this.activeFilePath,
+              files,
+              name: this.attr("name"),
+            };
+
+            const str = JSON.stringify(redata);
+
+            // 利用原生api压缩内容
+            const compressedStr = await compress(str);
+
+            if (location.host.includes("localhost")) {
+              window.open(`/code/w.html?d=${compressedStr}`);
+            } else {
+              window.open(
+                `https://playground.ofajs.com/code/w.html?d=${compressedStr}`,
+              );
+            }
+          },
           clearEditorResize() {
             localStorage.removeItem("playground-editor-width");
 

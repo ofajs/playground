@@ -1,0 +1,23 @@
+<template page>
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+  <h2 style="margin: 0; padding: 8px">{{val}}</h2>
+  <button on:click="clickBack">Back</button>
+  <script>
+    export default async ({ load }) => {
+      return {
+        data: {
+          val: "Page 2",
+        },
+        proto: {
+          clickBack() {
+            this.app.back();
+          },
+        },
+      };
+    };
+  </script>
+</template>

@@ -1,0 +1,361 @@
+<template page>
+  <l-m src="/gh/ofajs/Punch-UI/packages/input/input.html"></l-m>
+  <l-m src="/gh/ofajs/Punch-UI/packages/button/button.html"></l-m>
+  <l-m src="/gh/ofajs/Punch-UI/packages/dialog/dialog.html"></l-m>
+  <l-m src="/gh/ofajs/Punch-UI/packages/list/list.html"></l-m>
+  <style>
+    :host {
+      display: block;
+    }
+
+    .container {
+      padding: 0 1px;
+      max-width: 60vw;
+      min-width: 40vw;
+      min-height: 40vh;
+      max-height: 80vh;
+      overflow: auto;
+      cursor: default;
+    }
+
+    h4 {
+      margin: 8px 0;
+    }
+
+    p-list-item {
+      border-radius: 30px;
+      margin: 2px 0;
+    }
+    p-list-item[active-item] {
+      background-color: var(--md-sys-color-primary-container);
+    }
+
+    .icon {
+      font-size: 18px;
+      margin-right: 8px;
+      color: var(--md-sys-color-primary);
+    }
+
+    .temp-item {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--md-sys-color-normal);
+      cursor: pointer;
+    }
+    .temp-item.active {
+      color: var(--md-sys-color-on-primary);
+      background-color: var(--md-sys-color-primary);
+      cursor: default;
+    }
+  </style>
+
+  <p-dialog :open="open" on:click-mask="open = false">
+    <div slot="title">创建/切换项目</div>
+    <div class="container">
+      <h4>创建项目</h4>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0">
+        <o-fill :value="temps">
+          <div
+            class="temp-item"
+            class:active="$host.tempIndex === $index"
+            on:click="$host.tempIndex = $index"
+          >
+            {{$data.name}}
+          </div>
+        </o-fill>
+      </div>
+      <div style="padding: 8px 0 16px 0; display: flex; align-items: center">
+        <p-input
+          attr:disabled="creating"
+          sync:value="newProjectName"
+          style="flex: 1"
+        >
+          <label> 输入新项目名称 </label>
+        </p-input>
+        <p-button
+          attr:disabled="!newProjectName || creating"
+          style="margin-left: 8px"
+          on:click="createProject"
+        >
+          <n-icon icon="material-symbols:add-rounded" slot="prefix"></n-icon>
+          确认创建
+        </p-button>
+      </div>
+      <h4>已有的项目</h4>
+      <p-list style="max-height: 40vh; overflow-y: auto">
+        <o-fill :value="list">
+          <p-list-item
+            attr:active-item="$host.projectPath === $data.path"
+            button
+            on:click="$host.selectOpt($data)"
+          >
+            <o-if :value="$data.fromPlayground" slot="prefix">
+              <n-icon icon="ci:code" class="icon"></n-icon>
+            </o-if>
+            <o-else slot="prefix">
+              <n-icon icon="ix:project" class="icon"></n-icon>
+            </o-else>
+            {{$data.name}}
+            <o-if :value="$data.fromPlayground" slot="suffix">
+              <p-button
+                icon
+                size="small"
+                variant="text"
+                on:click="$host.restoreCode($data,$event)"
+                title="Restore Code"
+                attr:disabled="$host.creating"
+                style="margin-left: 8px; z-index: 3"
+              >
+                <n-icon icon="ic:round-restore"></n-icon>
+              </p-button>
+            </o-if>
+            <p-button
+              icon
+              size="small"
+              variant="text"
+              on:click="$host.deleteProject($data,$event)"
+              color="error"
+              slot="suffix"
+              attr:disabled="$host.creating || $host.projectPath === $data.path"
+              style="margin-left: 8px; z-index: 3"
+            >
+              <n-icon icon="material-symbols:delete-outline"></n-icon>
+            </p-button>
+          </p-list-item>
+        </o-fill>
+      </p-list>
+    </div>
+  </p-dialog>
+
+  <o-consumer
+    name="o-code"
+    watch:project-handle-path="projectPath"
+  ></o-consumer>
+  <script>
+    export default async ({ load, url }) => {
+      const { get } = await load("/nos/fs/main.js");
+      const { confirm } = await load("/gh/ofajs/Punch-UI/packages/util.js");
+      const { resetProjectFile } = await load(
+        "../../../../code/util/reset-project-file.js",
+      );
+
+      const resolve = (path) => {
+        const urlObj = new URL(path, url);
+        return urlObj.href;
+      };
+
+      return {
+        data: {
+          open: false,
+          list: [],
+          projectPath: "",
+          newProjectName: "",
+          creating: false,
+          tempIndex: 0,
+          temps: [
+            {
+              name: "静态页面案例",
+              path: "../template/static",
+            },
+            {
+              name: "ofa.js页面模块案例",
+              path: "../template/page-case",
+            },
+            {
+              name: "ofa.js应用案例",
+              path: "../template/app-case",
+            },
+          ],
+        },
+        proto: {
+          async createProject() {
+            this.creating = true;
+
+            // 创建目录
+            const newProjectHandle = await get(
+              `code-projects/project-${Date.now()}`,
+              {
+                create: "dir",
+              },
+            );
+
+            const tempData = this.temps[this.tempIndex];
+
+            // 获取对应的文件
+            const fileJson = await fetch(
+              resolve(tempData.path + "/_files.json"),
+            ).then((e) => e.json());
+
+            const files = [];
+
+            for (let path of fileJson.files) {
+              const content = await fetch(
+                resolve(tempData.path + "/" + path),
+              ).then((e) => e.text());
+
+              // 开始写入文件
+              const handle = await newProjectHandle.get(path, {
+                create: "file",
+              });
+
+              await handle.write(content);
+            }
+
+            const pkgHandle = await newProjectHandle.get("package.json", {
+              create: "file",
+            });
+
+            await pkgHandle.write(
+              JSON.stringify(
+                {
+                  name: this.newProjectName,
+                },
+                null,
+                2,
+              ),
+            );
+
+            this.selectOpt({
+              path: newProjectHandle.path,
+            });
+          },
+          async deleteProject(item, event) {
+            event.stopPropagation();
+            event.preventDefault();
+
+            const result = await confirm({
+              title: "删除项目",
+              message: `确定要删除项目 "${item.name}" 吗？此操作无法撤销。`,
+            });
+
+            if (!result) {
+              return;
+            }
+
+            const projectHash = item.path.split("/").pop();
+
+            try {
+              const projectHandle = await get(`code-projects/${projectHash}`);
+              if (projectHandle) {
+                await projectHandle.remove();
+              }
+
+              const originHandle = await get(
+                `code-origins/${projectHash}.json`,
+              );
+              if (originHandle) {
+                await originHandle.remove();
+              }
+
+              await this.loadProject();
+            } catch (error) {
+              console.error("删除项目失败:", error);
+            }
+          },
+          async restoreCode(item, event) {
+            event.stopPropagation();
+            event.preventDefault();
+
+            const result = await confirm({
+              title: "还原代码",
+              message:
+                "确定要还原这个项目的代码吗？代码将被覆盖，此操作无法撤销。",
+            });
+
+            if (!result) {
+              return;
+            }
+
+            const projectHash = item.path.split("/").pop();
+            const originHandle = await get(`code-origins/${projectHash}.json`);
+            const originData = await originHandle.text();
+
+            await resetProjectFile(originData);
+
+            location.reload();
+          },
+          selectOpt(item) {
+            // 切换并跳转
+            this.open = false;
+
+            const projectHash = item.path.split("/").pop();
+
+            location.href = `${location.origin + location.pathname}?h=${projectHash}`;
+          },
+          async loadProject() {
+            const handle = await get("code-projects");
+
+            if (!handle || handle.kind !== "dir") {
+              return;
+            }
+
+            const list = [];
+
+            for await (let item of handle.values()) {
+              try {
+                const pkgHandle = await item.get("package.json");
+
+                let name = null;
+
+                if (pkgHandle) {
+                  const data = await pkgHandle.json();
+                  name = data.name;
+                }
+
+                const projectHash = item.path.split("/").pop();
+
+                const originHandle = await get(
+                  `code-origins/${projectHash}.json`,
+                );
+
+                if (!name && originHandle) {
+                  const data = await originHandle.json();
+                  if (data.name) {
+                    name = data.name;
+                  } else if (data.time) {
+                    name = `case-${new Date(data.time).toLocaleString()}`;
+                  }
+                }
+
+                if (!name) {
+                  name = item.name;
+                }
+
+                list.push({
+                  path: item.path,
+                  name,
+                  fromPlayground: originHandle ? true : false,
+                });
+              } catch (error) {
+                console.log(error);
+              }
+            }
+
+            this.list = list;
+            // this.list = await getProjectList();
+          },
+          async updateTitle() {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            const item = this.shadow.$("p-list-item[active-item]");
+
+            if (item) {
+              $("title").text = item.text.trim();
+              this.emit("update-title", {
+                data: {
+                  title: item.text.trim(),
+                },
+              });
+            }
+          },
+        },
+        async attached() {
+          await this.loadProject();
+          this.updateTitle();
+        },
+      };
+    };
+  </script>
+</template>

@@ -80,9 +80,11 @@
         );
 
         // 监听编辑器内容变化
-        editor.onDidChangeModelContent(() => {
+        editor.onDidChangeModelContent((e) => {
           // 向父窗口发送内容变化消息
-          postMessage("contentChange");
+          postMessage("contentChange", {
+            changes: e.changes,
+          });
         });
 
         // 绑定 Ctrl+S 快捷键
@@ -123,7 +125,11 @@
             case "setTheme":
               const theme = event.data.theme;
               if (theme === "auto") {
-                const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                const systemTheme = window.matchMedia(
+                  "(prefers-color-scheme: dark)",
+                ).matches
+                  ? "dark"
+                  : "light";
                 if (systemTheme === "light") {
                   monaco.editor.setTheme("light");
                   document.documentElement.setAttribute("data-theme", "light");

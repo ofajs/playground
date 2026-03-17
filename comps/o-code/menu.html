@@ -1,0 +1,305 @@
+<template page>
+  <l-m src="/gh/ofajs/Punch-UI/packages/menu/menu.html"></l-m>
+  <style>
+    :host {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 30;
+      pointer-events: none;
+    }
+
+    .main-menu {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: auto;
+      z-index: 32;
+    }
+    .main-menu[open="off"] {
+      pointer-events: none;
+    }
+
+    .mask {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 31;
+      pointer-events: auto;
+    }
+    .hide {
+      display: none;
+    }
+    p-menu-item n-icon {
+      color: var(--md-sys-color-primary);
+    }
+  </style>
+  <div class="mask" on:click="openMenu = false" class:hide="!openMenu"></div>
+  <!-- 专门用于处理菜单的 -->
+  <o-consumer
+    name="o-code"
+    on:open-file-menu="openFileMenu"
+    watch:project-handle-path="projectPath"
+  ></o-consumer>
+  <p-menu class="main-menu" attr:open="openMenu ? 'on' : 'off'">
+    <!-- <p-menu-item>
+      <n-icon icon="lets-icons:view" slot="prefix"></n-icon>
+      预览
+    </p-menu-item> -->
+    <p-menu-item on:click="openFile" class:hide="projectPath === path">
+      <n-icon icon="majesticons:open-line" slot="prefix"></n-icon>
+      外部打开
+    </p-menu-item>
+    <hr class:hide="projectPath === path" />
+    <p-menu-item on:click="createItem('file')">
+      <n-icon icon="iconamoon:file-add" slot="prefix"></n-icon>
+      创建文件
+    </p-menu-item>
+    <p-menu-item on:click="createItem('dir')">
+      <n-icon
+        icon="material-symbols:create-new-folder-outline"
+        slot="prefix"
+      ></n-icon>
+      创建目录
+    </p-menu-item>
+    <p-menu-item on:click="renameItem" class:hide="projectPath === path">
+      <n-icon icon="boxicons:rename" slot="prefix"></n-icon>
+      重命名
+    </p-menu-item>
+    <hr />
+    <p-menu-item on:click="cutFile" class:hide="projectPath === path">
+      <n-icon icon="boxicons:cut" slot="prefix"></n-icon>
+      剪切
+    </p-menu-item>
+    <p-menu-item on:click="copyFile" class:hide="projectPath === path">
+      <n-icon icon="boxicons:copy" slot="prefix"></n-icon>
+      复制
+    </p-menu-item>
+    <p-menu-item attr:disabled="!inCut && !inCopy" on:click="pasteFile">
+      <n-icon icon="boxicons:paste" slot="prefix"></n-icon>
+      粘贴
+    </p-menu-item>
+    <hr class:hide="projectPath === path" />
+    <p-menu-item on:click="deleteFile" class:hide="projectPath === path">
+      <n-icon icon="material-symbols:delete-outline" slot="prefix"></n-icon>
+      删除
+    </p-menu-item>
+  </p-menu>
+  <script>
+    export default async ({ load }) => {
+      const { get } = await load("/nos/fs/main.js");
+      const { toast, confirm, prompt } = await load(
+        "/gh/ofajs/Punch-UI/packages/util.js",
+      );
+
+      return {
+        data: {
+          openMenu: false,
+          path: null,
+          projectPath: null,
+          inCut: "", // 等待剪切文件或目录
+          inCopy: "", // 等待复制文件或目录
+        },
+        proto: {
+          openFileMenu(e) {
+            const { path, kind, clientX, clientY } = e.data;
+
+            this.path = path;
+
+            const menu = this.shadow.$(".main-menu");
+
+            this.openMenu = true;
+
+            menu.style.left = `${clientX}px`;
+            menu.style.top = `${clientY}px`;
+          },
+          async renameItem() {
+            this.openMenu = false;
+
+            const handle = await get(this.path);
+            const parentHandle = handle.parent;
+
+            const result = await prompt({
+              title: "重命名",
+              message: `重命名 ${this.path}`,
+              label: "请输入新名称",
+              value: handle.name,
+            });
+
+            if (!result || result === handle.name) {
+              return;
+            }
+
+            const exitHandle = await parentHandle.get(result);
+            if (exitHandle) {
+              toast({
+                color: "error",
+                message:
+                  "目标目录下已存在相同名称的" +
+                  (exitHandle.kind === "file" ? "文件" : "目录"),
+              });
+              return;
+            }
+
+            await handle.moveTo(result);
+
+            const provider = this.getProvider("o-code");
+
+            provider.dispatch("refresh-list", {
+              data: {
+                path: parentHandle.path,
+              },
+            });
+          },
+          async createItem(type) {
+            this.openMenu = false;
+
+            const result = await prompt({
+              title: "创建" + (type === "file" ? "文件" : "目录"),
+              message: `在 ${this.path} 创建${type === "file" ? "文件" : "目录"}`,
+              label: `请输入${type === "file" ? "文件" : "目录"}名称`,
+            });
+
+            if (!result) {
+              return;
+            }
+
+            // 获取对应目录，如果是file，则获取父目录上创建
+            let handle = await get(this.path);
+            if (handle.kind === "file") {
+              handle = handle.parent;
+            }
+
+            // 查看是否已经有存在的文件或目录
+            const exitHandle = await handle.get(result);
+            if (exitHandle) {
+              toast({
+                color: "error",
+                message:
+                  "目标目录下已存在相同名称的" +
+                  (exitHandle.kind === "file" ? "文件" : "目录"),
+              });
+              return;
+            }
+
+            let activeFileHandle = null;
+
+            if (type === "file") {
+              activeFileHandle = await handle.get(result, {
+                create: "file",
+              });
+            } else {
+              await handle.get(result, {
+                create: "dir",
+              });
+            }
+
+            // 刷新列表
+            const provider = this.getProvider("o-code");
+
+            provider.dispatch("refresh-list", {
+              data: {
+                path: handle.path,
+                activePath: activeFileHandle ? activeFileHandle.path : null,
+              },
+            });
+          },
+          cutFile() {
+            this.inCut = this.path;
+            this.inCopy = "";
+            this.openMenu = false;
+          },
+          copyFile() {
+            this.inCut = "";
+            this.inCopy = this.path;
+            this.openMenu = false;
+          },
+          async pasteFile() {
+            let targetDirHandle = await get(this.path);
+
+            if (targetDirHandle.kind === "file") {
+              targetDirHandle = targetDirHandle.parent;
+            }
+
+            const handle = await get(this.inCut || this.inCopy);
+
+            // 查看是否有同名文件或目录
+            const equalNameFile = await targetDirHandle.get(handle.name);
+            if (equalNameFile) {
+              toast({
+                color: "error",
+                message: "目标目录下已存在相同名称文件或目录",
+              });
+              return;
+            }
+
+            this.openMenu = false;
+
+            if (this.inCut) {
+              // 粘贴操作
+              await handle.moveTo(targetDirHandle);
+            } else if (this.inCopy) {
+              // 粘贴操作
+              await handle.copyTo(targetDirHandle);
+            }
+
+            this.inCut = "";
+            this.inCopy = "";
+
+            // 出发刷新列表
+            const provider = this.getProvider("o-code");
+
+            provider.dispatch("refresh-list", {
+              data: {
+                path: targetDirHandle.path,
+                fromPath: handle.parent.path,
+                activePath: handle.path,
+              },
+            });
+          },
+          openFile() {
+            if (this.path) {
+              window.open(`/$${this.path}`);
+            }
+            this.openMenu = false;
+          },
+          async deleteFile() {
+            this.openMenu = false;
+
+            const path = this.path.split("/").slice(2).join("/");
+
+            const result = await confirm({
+              title: "删除确认",
+              message: `确定删除 ${path} 吗？该操作不可撤销`,
+            });
+
+            if (!result) {
+              return;
+            }
+
+            const handle = await get(this.path);
+
+            const parentHandlePath = handle.parent.path;
+
+            await handle.remove();
+
+            // 刷新列表
+            const provider = this.getProvider("o-code");
+
+            provider.dispatch("refresh-list", {
+              data: {
+                path: parentHandlePath,
+                removePath: handle.path,
+              },
+            });
+          },
+        },
+      };
+    };
+  </script>
+</template>

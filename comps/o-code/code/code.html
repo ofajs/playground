@@ -1,0 +1,176 @@
+<template page>
+  <l-m src="../../../comps/monaco-editor/monaco-editor.html"></l-m>
+  <l-m src="/nos/n-icon/n-icon.html"></l-m>
+  <style>
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    .error-article {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background-color: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+    }
+    .error-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: var(--md-sys-color-error);
+    }
+    .error-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--md-sys-color-on-surface);
+    }
+    .error-message {
+      font-size: 14px;
+      color: var(--md-sys-color-on-surface);
+      opacity: 0.7;
+      word-break: break-all;
+      text-align: center;
+      padding: 0 24px;
+      max-width: 80%;
+    }
+  </style>
+  <o-if :value="isError">
+    <div class="error-article">
+      <n-icon icon="material-symbols:error-outline" class="error-icon"></n-icon>
+      <div class="error-title">文件加载失败</div>
+      <div class="error-message">当前文件路径：{{ errorPath }}</div>
+    </div>
+  </o-if>
+  <monaco-editor
+    plugins="prettier"
+    on:initialized="initOK"
+    on:save="save"
+    on:change="contentChange"
+    style="height: 100%; width: 100%"
+  ></monaco-editor>
+  <o-consumer name="o-code" watch:active-path="activePath"></o-consumer>
+  <script>
+    export default async ({ load }) => {
+      const { get } = await load("/nos/fs/main.js");
+
+      return {
+        data: {
+          activePath: "", // 激活路径
+          isError: false,
+          errorPath: "",
+          _fileHistoryContent: {},
+        },
+        watch: {
+          async activePath(path) {
+            if (!path) {
+              return;
+            }
+
+            const handle = await get(path);
+
+            let content = "";
+
+            try {
+              content = await handle.text();
+            } catch (err) {
+              this.isError = true;
+              this.errorPath = path;
+              console.error(err);
+              return;
+            }
+
+            this.isError = false;
+
+            await this._initok;
+
+            this._editor.switchState(path); // 直接切换到该路径
+
+            const tabs = this.tabs;
+
+            const targetTab = tabs.find((tab) => tab.path === path);
+
+            // 没有历史记录，且没有对应的tab，设置值
+            if (!this._fileHistoryContent[path]) {
+              this._editor.setValue(content);
+            }
+            // this._editor.setValue(this._fileHistoryContent[path]); // 切换 state 后，自动会切换到对应的值
+
+            // 根据后缀设置语言
+            const fileName = handle.name;
+            let language = fileName.split(".").pop();
+
+            if (language === "js" || language === "mjs") {
+              language = "javascript";
+            }
+
+            this._editor.setLanguage(language);
+            this._editor.focus();
+          },
+        },
+        proto: {
+          get tabs() {
+            const tabsPage = this.host.shadow.$(`o-page[src*="/tabs.html"]`);
+            return tabsPage ? tabsPage.tabs.slice() : [];
+          },
+          async save(e) {
+            const code = await this.shadow.$("monaco-editor").getValue();
+            const handle = await get(this.activePath);
+            const originContent = await handle.text();
+            // 如果没有改动，不保存
+            if (originContent === code) {
+              return;
+            }
+
+            await handle.write(code);
+
+            const provider = this.getProvider("o-code");
+            provider.dispatch("save-content", {
+              data: {
+                path: this.activePath,
+              },
+            });
+          },
+          contentChange(e) {
+            // 记录历史
+            clearTimeout(this._changeTimer);
+            this._changeTimer = setTimeout(async () => {
+              const code = await this.shadow.$("monaco-editor").getValue();
+              this._fileHistoryContent[this.activePath] = code;
+
+              const provider = this.getProvider("o-code");
+              provider.dispatch("content-change", {
+                data: {
+                  path: this.activePath,
+                },
+              });
+            }, 100);
+          },
+          initOK() {
+            if (this._init_resolve) {
+              this._init_resolve();
+              this._init_resolve = null;
+            }
+          },
+        },
+        ready() {
+          this._initok = new Promise(
+            (resolve) => (this._init_resolve = resolve),
+          );
+
+          this._editor = this.shadow.$("monaco-editor");
+
+          if (this._editor._initialized) {
+            this._editor._initialized.then(() => {
+              this._init_resolve();
+            });
+          }
+        },
+      };
+    };
+  </script>
+</template>

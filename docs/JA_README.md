@@ -11,7 +11,9 @@ o-playgroundはマルチファイル編集やリアルタイムプレビュー�
 <l-m src="https://playground.ofajs.com/comps/o-playground/o-playground.html"></l-m>
 <o-playground>
   <code path="demo.html">
-    <div>Hello World</div>
+    <template>
+      <div>Hello World</div>
+    </template>
   </code>
 </o-playground>
 ```
@@ -146,15 +148,17 @@ o-playgroundはマルチファイル編集やリアルタイムプレビュー�
 ```html
 <o-playground style="--editor-height: 300px">
   <code>
-    <div id="target1">
-      <p>Hello NoneOS Demo Code</p>
-    </div>
-    <script>
-      let count = 0;
-      setInterval(() => {
-        $("#target1").text = "change text " + count++;
-      }, 500);
-    </script>
+    <template>
+      <div id="target1">
+        <p>Hello NoneOS Demo Code</p>
+      </div>
+      <script>
+        let count = 0;
+        setInterval(() => {
+          $("#target1").text = "change text " + count++;
+        }, 500);
+      </script>
+    </template>
   </code>
 </o-playground>
 ```

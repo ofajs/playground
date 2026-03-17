@@ -1,0 +1,163 @@
+<template page>
+  <l-m src="/gh/ofajs/Punch-UI/packages/wave/wave.html"></l-m>
+  <style>
+    :host {
+      display: flex;
+      width: 100%;
+      height: 40px;
+      align-items: center;
+      cursor: pointer;
+    }
+    .logo {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 40px;
+      padding: 0 20px 0 12px;
+      margin: 4px 0 0 4px;
+      border-radius: 16px;
+    }
+    .logo-text {
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .logo img {
+      height: 24px;
+    }
+    .logo-text-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-left: 6px;
+      line-height: 0.76em;
+    }
+
+    .logo-sub-text {
+      display: inline-block;
+      font-size: 10px;
+      color: var(--md-sys-color-normal);
+      opacity: 0;
+      margin-top: 0;
+      height: 0;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .logo:hover .logo-sub-text {
+      height: 12px;
+      margin-top: 4px;
+      opacity: 1;
+    }
+
+    .project-title {
+      margin-top: 4px;
+      font-size: 12px;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      opacity: 1;
+      color: var(--md-sys-color-primary);
+      transition: all 0.2s ease-in-out;
+      height: 12px;
+    }
+    .logo:hover .project-title {
+      margin-top: 0;
+      opacity: 0;
+      height: 0;
+    }
+    p-button {
+      margin-left: 8px;
+    }
+  </style>
+  <div class="logo" on:click="openSwitchDialog = true">
+    <!-- <p-wave></p-wave> -->
+    <img src="./logo.svg" alt="logo" />
+    <div class="logo-text-wrapper">
+      <div class="logo-text">OFA Playground</div>
+      <div class="project-title">{{title}}</div>
+      <span class="logo-sub-text">创建/切换项目</span>
+    </div>
+  </div>
+  <p-button
+    icon
+    variant="text"
+    size="small"
+    on:click="clickSidebarBtn"
+    style="margin-left: 64px"
+  >
+    <n-icon icon="boxicons:sidebar"></n-icon>
+  </p-button>
+  <p-button variant="text" on:click="clickPreviewBtn" size="small">
+    <n-icon icon="material-symbols:preview" slot="prefix"></n-icon>
+    预览
+  </p-button>
+
+  <div style="flex: 1"></div>
+
+  <p-button variant="outlined" size="small" on:click="clickDownloadBtn">
+    <n-icon icon="mdi:download" slot="prefix"></n-icon>
+    下载项目
+  </p-button>
+
+  <p-button
+    size="small"
+    on:click="openShareDialog = true"
+    style="margin-right: 16px"
+  >
+    <n-icon icon="ic:twotone-share" slot="prefix"></n-icon>
+    发布
+  </p-button>
+
+  <o-consumer
+    name="o-code"
+    watch:project-handle-path="projectPath"
+  ></o-consumer>
+
+  <o-page
+    src="./share-panel.html"
+    sync:open="openShareDialog"
+    style="position: absolute"
+  ></o-page>
+
+  <o-page
+    src="./switch-project.html"
+    sync:open="openSwitchDialog"
+    on:update-title="updateTitle"
+    style="position: absolute"
+  ></o-page>
+
+  <script>
+    export default async ({ load }) => {
+      const { download } = await load("/nos/fs/download.js");
+      const { get } = await load("/nos/fs/main.js");
+
+      return {
+        data: {
+          projectPath: null,
+          openShareDialog: false,
+          openSwitchDialog: false,
+          title: "",
+        },
+        proto: {
+          updateTitle(e) {
+            this.title = e.data.title;
+          },
+          clickPreviewBtn() {
+            const provider = this.getProvider("o-code");
+            provider.emit("click-preview-btn");
+            provider.dispatch("click-preview-btn");
+          },
+          clickSidebarBtn() {
+            const provider = this.getProvider("o-code");
+            provider.emit("click-sidebar-btn");
+          },
+          async clickDownloadBtn() {
+            const handle = await get(this.projectPath);
+            download(handle);
+          },
+        },
+      };
+    };
+  </script>
+</template>
