@@ -85,6 +85,22 @@ Marks this file as an "unimportant" file. Combined with the "Hide unimportant fi
 <code path="utils.js" unimportant>...</code>
 ```
 
+## Component Attributes
+
+### `name` (optional)
+
+Specifies the name of the project. When clicking "Open in New Window", this name will be passed as a project identifier to the external editor page, making it easier to identify the project source.
+
+```html
+<o-playground name="my-sample-project">
+  <code path="demo.html">
+    <template>
+      <div>Hello World</div>
+    </template>
+  </code>
+</o-playground>
+```
+
 ## Automatic File Type Recognition
 
 The component automatically recognizes the following file types:
