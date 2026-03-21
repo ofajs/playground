@@ -341,9 +341,23 @@
         },
         proto: {
           async handleOpenClick() {
-            // 获取所有内容并精简，保存成一个对象
-            const data = await this.getFileContent();
-            const files = data.files.map((item) => ({
+            // // 获取所有内容并精简，保存成一个对象
+            // const data = await this.getFileContent();
+
+            // if (
+            //   data.files.length === 1 &&
+            //   data.files[0].content.startsWith("<template ")
+            // ) {
+            //   // 只有一个页面模块的情况下，补充展示用的html预览代码
+            //   debugger;
+            // }
+
+            // const files = data.files.map((item) => ({
+            //   p: item.path,
+            //   c: item.content,
+            // }));
+
+            const files = this.fileItems.map((item) => ({
               p: item.path,
               c: item.content,
             }));
