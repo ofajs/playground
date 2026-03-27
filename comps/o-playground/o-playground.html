@@ -290,25 +290,17 @@
         $("body").push(writerFrame);
       });
 
-      // 检查本地是否已安装nos
-      const hasLocalInstallation = await fetch("/nos/nos.json")
-        .then((res) => res.json())
-        .catch(() => null);
-
-      const configData = await fetch("/__config")
-        .then((res) => res.json())
-        .catch(() => null);
-
-      // 统一资源前缀，避免重复拼接
       const localPrefix = location.origin;
       const remotePrefix = "https://core.noneos.com";
 
-      const prefix =
-        hasLocalInstallation && configData?.serviceWorkerVersion
-          ? localPrefix
-          : remotePrefix;
+      const iconExists = await fetch(`${localPrefix}/nos/n-icon/n-icon.html`, {
+        method: "HEAD",
+      })
+        .then((r) => r.ok)
+        .catch(() => false);
 
-      // 并行加载图标组件与哈希工具，减少等待时间
+      const prefix = iconExists ? localPrefix : remotePrefix;
+
       const [, { getHash }] = await Promise.all([
         load(`${prefix}/nos/n-icon/n-icon.html`),
         load(`${prefix}/nos/util/hash/get-hash.js`),
