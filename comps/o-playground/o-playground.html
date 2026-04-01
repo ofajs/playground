@@ -1,8 +1,15 @@
 <template component>
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+  <div class="container"></div>
   <script>
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
     export default async ({ load, url }) => {
+      // safari 无法满足 iframe内嵌套的 none-core运行，所以被迫使用 sample 版本
       const componentSrc = isSafari
         ? "./sample-playground.html"
         : "./standard-playground.html";
@@ -19,19 +26,9 @@
           const targetTag = isSafari
             ? "o-sample-playground"
             : "o-standard-playground";
-          const targetElement = document.createElement(targetTag);
 
-          const name = this.attr("name");
-          if (name) {
-            targetElement.setAttribute("name", name);
-          }
-
-          const children = Array.from(this.ele.children);
-          children.forEach((child) => {
-            targetElement.appendChild(child);
-          });
-
-          this.ele.replaceWith(targetElement);
+          this.shadow.$(".container").html =
+            `<${targetTag}>${this.html}</${targetTag}>`;
         },
       };
     };
