@@ -512,6 +512,23 @@
           async initPreview() {
             const data = await this.getFileContent();
 
+            if (data.files.length === 1) {
+              data.files[0].defaultActive = true;
+
+              if (data.files[0].isPage) {
+                const indexFile = {
+                  path: "index.html",
+                  content: `${prefixContent}\n<o-page src="./${data.files[0].path}"></o-page>`,
+                  unimportant: true,
+                  isComponent: false,
+                  isPage: false,
+                  preview: false,
+                };
+
+                data.files.push(indexFile);
+              }
+            }
+
             this.fileItems = data.files;
 
             let activeFileData = data.files.find((item) => item.defaultActive);
