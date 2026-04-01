@@ -1,0 +1,407 @@
+<template component>
+  <style>
+    :host {
+      position: relative;
+      display: block;
+      border-radius: 8px;
+      border: 1px solid var(--md-sys-color-primary);
+      overflow: hidden;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      height: 32px;
+      padding: 0 8px;
+      color: var(--md-sys-color-on-primary);
+      background-color: var(--md-sys-color-primary);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      flex: 1;
+      height: 100%;
+      user-select: none;
+    }
+
+    .tab {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 0 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: inherit;
+      margin-right: 2px;
+    }
+
+    .tab:hover {
+      color: var(--md-sys-color-primary-container);
+      background-color: var(--md-sys-color-on-primary-container);
+    }
+
+    .tab.active {
+      color: var(--md-sys-color-primary-container);
+      background-color: var(--md-sys-color-on-primary-container);
+    }
+
+    .tab.active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--md-sys-color-primary-container);
+    }
+
+    .tab.hide {
+      display: none;
+    }
+
+    .content {
+      position: relative;
+      display: flex;
+      height: 100%;
+    }
+
+    .code-container {
+      flex: 1;
+      overflow: auto;
+      background-color: var(--md-sys-color-surface);
+      padding: 16px;
+    }
+
+    .code-block {
+      margin: 0;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre;
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .preview-container {
+      width: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--md-sys-color-surface-variant);
+      border-left: 1px solid var(--md-sys-color-outline);
+    }
+
+    .open-btn {
+      padding: 12px 24px;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      background-color: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .open-btn:hover {
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+    }
+
+    .open-btn:active {
+      transform: scale(0.98);
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--md-sys-color-surface, #f3f3f3);
+      border-top: 2px solid var(--md-sys-color-primary, #3498db);
+      border-radius: 50%;
+      animation: spin 0.5s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .mask {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--md-sys-color-surface);
+      z-index: 3;
+    }
+
+    .hide {
+      display: none;
+    }
+  </style>
+
+  <div class="mask" class:hide="isReady">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="top-bar">
+    <div class="tabs">
+      <o-fill :value="fileItems">
+        <div
+          class="tab"
+          on:click="$host.handleTabClick($data)"
+          class:active="$host.activeFilePath === $data.path"
+          class:hide="$host.hideUnimportantFiles && $data.unimportant"
+        >
+          {{$data.path}}
+        </div>
+      </o-fill>
+    </div>
+    <div class="top-btn" on:click="showConfig = true">
+      <n-icon icon="uil:setting"></n-icon>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="code-container">
+      <pre class="code-block">{{activeFileContent}}</pre>
+    </div>
+    <div class="preview-container">
+      <button class="open-btn" on:click="handleOpenClick">
+        在 Playground 中打开
+      </button>
+    </div>
+  </div>
+
+  <style>
+    .setting-dialog {
+      position: absolute;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease-in-out;
+      background-color: rgba(
+        from var(--md-sys-color-normal-container) r g b / 0.8
+      );
+      user-select: none;
+    }
+
+    .setting-content {
+      padding: 16px;
+      border-radius: 8px;
+      background-color: var(--md-sys-color-surface);
+    }
+  </style>
+
+  <div
+    class="setting-dialog"
+    on:click="showConfig = false"
+    class:hide="!showConfig"
+  >
+    <div class="setting-content" on:click="$event.stopPropagation()">
+      <label>
+        <input type="checkbox" sync:checked="hideUnimportantFiles" />
+        Hide unimportant files
+      </label>
+    </div>
+  </div>
+
+  <o-consumer name="pui" watch:theme="theme"></o-consumer>
+
+  <script>
+    import { prefixContent } from "./public.js";
+    export default async ({ load, url }) => {
+      const localPrefix = location.origin;
+      const remotePrefix = "https://core.noneos.com";
+
+      const iconExists = await fetch(`${localPrefix}/nos/n-icon/n-icon.html`, {
+        method: "HEAD",
+      })
+        .then((r) => r.ok)
+        .catch(() => false);
+
+      const prefix = iconExists ? localPrefix : remotePrefix;
+
+      const [, { getHash }] = await Promise.all([
+        load(`${prefix}/nos/n-icon/n-icon.html`),
+        load(`${prefix}/nos/util/hash/get-hash.js`),
+      ]);
+
+      const { compress, decompress } = await load("../util.js");
+
+      return {
+        tag: "o-sample-playground",
+        attrs: { already: "" },
+        data: {
+          theme: "",
+          fileItems: [],
+          activeFilePath: null,
+          activeFileContent: "",
+          isReady: false,
+          showConfig: false,
+          hideUnimportantFiles: true,
+        },
+        proto: {
+          async handleOpenClick() {
+            const files = this.fileItems.map((item) => ({
+              p: item.path,
+              c: item.content,
+            }));
+
+            const redata = {
+              active: this.activeFilePath,
+              files,
+              name: this.attr("name"),
+            };
+
+            const str = JSON.stringify(redata);
+
+            const compressedStr = await compress(str);
+
+            if (location.host.includes("localhost:4002")) {
+              window.open(`/?redirect=w&d=${compressedStr}`);
+            } else {
+              window.open(
+                `https://playground.ofajs.com/?redirect=w&d=${compressedStr}`,
+              );
+            }
+          },
+          handleTabClick(tab) {
+            if (tab.path === this.activeFilePath) {
+              return;
+            }
+
+            this.activeFilePath = tab.path;
+            this.updateActiveFileContent();
+          },
+          updateActiveFileContent() {
+            const activeFile = this.fileItems.find(
+              (item) => item.path === this.activeFilePath,
+            );
+            if (activeFile) {
+              this.activeFileContent = activeFile.content;
+            }
+          },
+          async getFileContent() {
+            const codes = this.all("code");
+
+            const files = await Promise.all(
+              codes
+                .map(async (codeEl) => {
+                  let path = codeEl.attr("path");
+
+                  if (!path) {
+                    if (codes.length === 1) {
+                      path = "demo.html";
+                    } else {
+                      return;
+                    }
+                  }
+
+                  const firstCodeChild = codeEl[0];
+
+                  const isComponent =
+                    firstCodeChild && firstCodeChild.attr("component") !== null;
+                  const isPage =
+                    firstCodeChild && firstCodeChild.attr("page") !== null;
+
+                  let content = "";
+
+                  if (isPage) {
+                    content = `<template page\>${decodeHTMLEntities(firstCodeChild.html)}</template>`;
+                  } else if (isComponent) {
+                    content = `<template component\>${decodeHTMLEntities(firstCodeChild.html)}</template>`;
+                  } else if (
+                    codeEl.length === 1 &&
+                    (firstCodeChild.tag === "template" ||
+                      firstCodeChild.tag === "pre")
+                  ) {
+                    content = decodeHTMLEntities(firstCodeChild.html);
+                  } else {
+                    content = decodeHTMLEntities(codeEl.html);
+                  }
+
+                  const contentHash = await getHash(content);
+
+                  if (
+                    !isComponent &&
+                    !isPage &&
+                    !!firstCodeChild &&
+                    firstCodeChild.tag === "template"
+                  ) {
+                    content =
+                      `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" />` +
+                      content;
+                    content =
+                      `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/theme.css" />` +
+                      content;
+                    content =
+                      `<script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"><\/script>` +
+                      content;
+                  }
+
+                  const active = codeEl.attr("active") !== null;
+                  const preview = codeEl.attr("preview") !== null;
+                  const unimportant = codeEl.attr("unimportant") !== null;
+
+                  return {
+                    contentHash,
+                    path,
+                    content,
+                    isComponent,
+                    isPage,
+                    defaultActive: active,
+                    preview,
+                    unimportant,
+                  };
+                })
+                .filter((item) => !!item),
+            );
+
+            return {
+              files,
+            };
+          },
+          async initPreview() {
+            const data = await this.getFileContent();
+
+            this.fileItems = data.files;
+
+            let activeFileData = data.files.find((item) => item.defaultActive);
+
+            if (!activeFileData) {
+              activeFileData = data.files[0];
+            }
+
+            this.activeFilePath = activeFileData.path;
+            this.updateActiveFileContent();
+            this.isReady = true;
+          },
+        },
+        async ready() {},
+        async attached() {
+          await this.initPreview();
+        },
+        detached() {},
+      };
+    };
+
+    const decodeHTMLEntities = (str) => {
+      const textarea = document.createElement("textarea");
+      textarea.innerHTML = str;
+      return textarea.value;
+    };
+  </script>
+</template>
