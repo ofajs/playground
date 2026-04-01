@@ -72,7 +72,7 @@
       flex: 1;
       overflow: auto;
       background-color: var(--md-sys-color-surface);
-      padding: 16px;
+      border-right: 1px solid var(--md-sys-color-primary);
     }
 
     .code-block {
@@ -82,11 +82,20 @@
       line-height: 1.5;
       white-space: pre;
       color: var(--md-sys-color-on-surface);
+      background: transparent;
+    }
+
+    .code-block code {
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      background: transparent;
     }
 
     .preview-container {
       flex: 0 0 300px;
       display: flex;
+      padding: 16px;
       align-items: center;
       justify-content: center;
       background-color: var(--md-sys-color-surface-variant);
@@ -111,6 +120,10 @@
 
     .open-btn:active {
       transform: scale(0.98);
+    }
+
+    #code-display {
+      min-height: 100px;
     }
 
     .spinner {
@@ -149,6 +162,8 @@
     }
   </style>
 
+  <link rel="stylesheet" href="./hljs.css" />
+
   <div class="mask" class:hide="isReady">
     <div class="spinner"></div>
   </div>
@@ -173,7 +188,7 @@
 
   <div class="content">
     <div class="code-container">
-      <pre class="code-block">{{activeFileContent}}</pre>
+      <pre class="code-block"><code id="code-display" class="hljs"></code></pre>
     </div>
     <div class="preview-container">
       <button class="open-btn" on:click="handleOpenClick">
@@ -224,8 +239,12 @@
     import jsBeautify from "https://cdn.jsdelivr.net/npm/js-beautify@1.15.1/+esm";
     import hljs from "https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/+esm";
 
+    let linkAppended = false;
+
     import { prefixContent } from "./public.js";
     export default async ({ load, url }) => {
+      const linkUrlObj = new URL("./hljs.css", url);
+
       const localPrefix = location.origin;
       const remotePrefix = "https://core.noneos.com";
 
@@ -251,7 +270,6 @@
           theme: "",
           fileItems: [],
           activeFilePath: null,
-          activeFileContent: "",
           isReady: false,
           showConfig: false,
           hideUnimportantFiles: true,
@@ -289,12 +307,126 @@
             this.activeFilePath = tab.path;
             this.updateActiveFileContent();
           },
+          getLanguageFromPath(path) {
+            const ext = path.split(".").pop().toLowerCase();
+            const langMap = {
+              html: "html",
+              htm: "html",
+              js: "javascript",
+              javascript: "javascript",
+              ts: "typescript",
+              typescript: "typescript",
+              css: "css",
+              json: "json",
+              xml: "xml",
+              md: "markdown",
+              markdown: "markdown",
+              py: "python",
+              python: "python",
+              java: "java",
+              cpp: "cpp",
+              c: "c",
+              go: "go",
+              rs: "rust",
+              rust: "rust",
+              php: "php",
+              rb: "ruby",
+              ruby: "ruby",
+              sql: "sql",
+              yaml: "yaml",
+              yml: "yaml",
+              sh: "bash",
+              bash: "bash",
+              vue: "vue",
+              jsx: "javascript",
+              tsx: "typescript",
+            };
+            return langMap[ext] || "plaintext";
+          },
+          formatCode(content, language) {
+            try {
+              if (language === "html" || language === "xml") {
+                return jsBeautify.html(content, {
+                  indent_size: 2,
+                  indent_char: " ",
+                  max_preserve_newlines: 2,
+                  preserve_newlines: true,
+                  indent_inner_html: true,
+                  wrap_line_length: 0,
+                  wrap_attributes: "auto",
+                  wrap_attributes_indent_size: 2,
+                  end_with_newline: true,
+                });
+              } else if (
+                language === "javascript" ||
+                language === "typescript"
+              ) {
+                return jsBeautify.js(content, {
+                  indent_size: 2,
+                  indent_char: " ",
+                  max_preserve_newlines: 2,
+                  preserve_newlines: true,
+                  space_in_paren: false,
+                  space_in_empty_paren: false,
+                  jslint_happy: false,
+                  space_after_anon_function: true,
+                  space_after_named_function: false,
+                  space_before_conditional: true,
+                  keep_array_indentation: false,
+                  keep_function_indentation: false,
+                  unescape_strings: false,
+                  wrap_line_length: 0,
+                  e4x: false,
+                  comma_first: false,
+                  operator_position: "before-newline",
+                  indent_empty_lines: false,
+                  templating: ["auto"],
+                });
+              } else if (language === "css") {
+                return jsBeautify.css(content, {
+                  indent_size: 2,
+                  indent_char: " ",
+                  max_preserve_newlines: 2,
+                  preserve_newlines: true,
+                  selector_separator_newline: true,
+                  end_with_newline: true,
+                  newline_between_rules: true,
+                  space_around_combinator: true,
+                });
+              }
+            } catch (error) {
+              console.warn("Code formatting failed:", error);
+            }
+            return content;
+          },
           updateActiveFileContent() {
             const activeFile = this.fileItems.find(
               (item) => item.path === this.activeFilePath,
             );
             if (activeFile) {
-              this.activeFileContent = activeFile.content;
+              const language = this.getLanguageFromPath(activeFile.path);
+              const formattedCode = this.formatCode(
+                activeFile.content,
+                language,
+              );
+
+              try {
+                const highlightedCode = hljs.highlight(formattedCode, {
+                  language: language,
+                  ignoreIllegals: true,
+                }).value;
+
+                const codeDisplay = this.shadow.$("#code-display");
+                if (codeDisplay) {
+                  codeDisplay.html = highlightedCode;
+                }
+              } catch (error) {
+                console.warn("Code highlighting failed:", error);
+                const codeDisplay = this.shadow.$("#code-display");
+                if (codeDisplay) {
+                  codeDisplay.text = formattedCode;
+                }
+              }
             }
           },
           async getFileContent() {
@@ -396,6 +528,13 @@
         async ready() {},
         async attached() {
           await this.initPreview();
+
+          if (!linkAppended) {
+            $("head").push(
+              `<link rel="stylesheet" href="${linkUrlObj.href}" />`,
+            );
+            linkAppended = true;
+          }
         },
         detached() {},
       };
