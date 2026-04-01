@@ -85,7 +85,7 @@
     }
 
     .preview-container {
-      width: 300px;
+      flex: 0 0 300px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -221,6 +221,8 @@
   <o-consumer name="pui" watch:theme="theme"></o-consumer>
 
   <script>
+    import jsBeautify from "https://cdn.jsdelivr.net/npm/js-beautify@1.15.1/+esm";
+    
     import { prefixContent } from "./public.js";
     export default async ({ load, url }) => {
       const localPrefix = location.origin;
