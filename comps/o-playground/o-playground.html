@@ -267,7 +267,11 @@
   <o-consumer name="pui" watch:theme="theme"></o-consumer>
 
   <script>
-    import { prefixContent } from "./public.js";
+    import {
+      prefixContent,
+      getFileContent,
+      handleOpenClick,
+    } from "./public.js";
     export default async ({ load, url }) => {
       // 等待系统安装完成
       const systemInstalled = new Promise((resolve) => {
@@ -333,34 +337,12 @@
         },
         proto: {
           async handleOpenClick() {
-            // 获取所有内容并精简，保存成一个对象
-            const files = this.fileItems.map((item) => ({
-              p: item.path,
-              c: item.content,
-            }));
-
-            const redata = {
-              active: this.activeFilePath,
-              files,
-              name: this.attr("name"),
-            };
-
-            const str = JSON.stringify(redata);
-
-            // 利用原生api压缩内容
-            const compressedStr = await compress(str);
-
-            if (location.host.includes("localhost:4002")) {
-              // window.open(`/code/w.html?d=${compressedStr}`);
-              window.open(`/?redirect=w&d=${compressedStr}`);
-            } else {
-              // window.open(
-              //   `https://playground.ofajs.com/code/w.html?d=${compressedStr}`,
-              // );
-              window.open(
-                `https://playground.ofajs.com/?redirect=w&d=${compressedStr}`,
-              );
-            }
+            await handleOpenClick(
+              this.fileItems,
+              this.activeFilePath,
+              compress,
+              this.attr("name"),
+            );
           },
           clearEditorResize() {
             localStorage.removeItem("playground-editor-width");
@@ -410,96 +392,8 @@
               this._isReloadInProgress = false;
             }, 100);
           },
-          // 获取代码并进行格式化等操作
           async getFileContent() {
-            const codes = this.all("code");
-
-            const files = await Promise.all(
-              codes
-                .map(async (codeEl) => {
-                  let path = codeEl.attr("path");
-
-                  if (!path) {
-                    if (codes.length === 1) {
-                      // 如果只是一个案例，则进行额外补充文件，修正path
-                      path = "demo.html";
-                    } else {
-                      return;
-                    }
-                  }
-
-                  const firstCodeChild = codeEl[0];
-
-                  const isComponent =
-                    firstCodeChild && firstCodeChild.attr("component") !== null;
-                  const isPage =
-                    firstCodeChild && firstCodeChild.attr("page") !== null;
-
-                  let content = "";
-
-                  if (isPage) {
-                    content = `<template page\>${decodeHTMLEntities(firstCodeChild.html)}</template>`;
-                  } else if (isComponent) {
-                    content = `<template component\>${decodeHTMLEntities(firstCodeChild.html)}</template>`;
-                  } else if (
-                    codeEl.length === 1 &&
-                    (firstCodeChild.tag === "template" ||
-                      firstCodeChild.tag === "pre")
-                  ) {
-                    // 解套
-                    content = decodeHTMLEntities(firstCodeChild.html);
-                  } else {
-                    content = decodeHTMLEntities(codeEl.html);
-                  }
-
-                  // 获取内容hash
-                  const contentHash = await getHash(content);
-
-                  if (
-                    !isComponent &&
-                    !isPage &&
-                    !!firstCodeChild &&
-                    firstCodeChild.tag === "template"
-                  ) {
-                    // 加上样式
-                    content =
-                      `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/palette.css" />` +
-                      content;
-                    content =
-                      `<link rel="stylesheet" href="https://core.noneos.com/nos-tool/css/theme.css" />` +
-                      content;
-                    content =
-                      `<script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js/dist/ofa.min.js#debug"><\/script>` +
-                      content;
-                  }
-
-                  const active = codeEl.attr("active") !== null;
-                  const preview = codeEl.attr("preview") !== null;
-                  const unimportant = codeEl.attr("unimportant") !== null;
-
-                  return {
-                    contentHash,
-                    path,
-                    content,
-                    isComponent,
-                    isPage,
-                    defaultActive: active,
-                    preview,
-                    unimportant,
-                  };
-                })
-                .filter((item) => !!item),
-            );
-
-            // 计算总hash
-            const totalHash = await getHash(
-              files.map((item) => item.contentHash).join(""),
-            );
-
-            return {
-              files,
-              totalHash,
-            };
+            return await getFileContent(this.all("code"), getHash);
           },
           async initPreview() {
             const data = await this.getFileContent();
@@ -645,12 +539,6 @@
           this._visibilityObserver && this._visibilityObserver.disconnect();
         },
       };
-    };
-
-    const decodeHTMLEntities = (str) => {
-      const textarea = document.createElement("textarea");
-      textarea.innerHTML = str;
-      return textarea.value;
     };
   </script>
 </template>
