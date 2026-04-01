@@ -1,0 +1,39 @@
+<template component>
+  <script>
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+    export default async ({ load, url }) => {
+      const componentSrc = isSafari
+        ? "./sample-playground.html"
+        : "./standard-playground.html";
+
+      load(componentSrc);
+
+      return {
+        tag: "o-playground",
+        attrs: {
+          name: null,
+        },
+        data: {},
+        async attached() {
+          const targetTag = isSafari
+            ? "o-sample-playground"
+            : "o-standard-playground";
+          const targetElement = document.createElement(targetTag);
+
+          const name = this.attr("name");
+          if (name) {
+            targetElement.setAttribute("name", name);
+          }
+
+          const children = Array.from(this.ele.children);
+          children.forEach((child) => {
+            targetElement.appendChild(child);
+          });
+
+          this.ele.replaceWith(targetElement);
+        },
+      };
+    };
+  </script>
+</template>
