@@ -3,7 +3,7 @@
     :host {
       position: relative;
       display: block;
-      container-type: inline-size; /* 启用基于内联尺寸（通常是宽度）的容器查询 */
+      container-type: inline-size;
       border-radius: 8px;
       border: 1px solid var(--md-sys-color-primary);
       overflow: hidden;
@@ -273,7 +273,6 @@
       handleOpenClick,
     } from "./public.js";
     export default async ({ load, url }) => {
-      // 等待系统安装完成
       const systemInstalled = new Promise((resolve) => {
         let systemInstalledHandler;
         window.addEventListener(
@@ -313,22 +312,22 @@
       const { compress, decompress } = await load("../util.js");
 
       return {
-        tag: "o-playground",
+        tag: "standard-playground",
         attrs: { already: "" },
         data: {
           theme: "",
           fileItems: [],
-          activeFilePath: null, // 查看代码的文件路径
-          previewFileItemPath: null, // 预览文件项
-          previewPath: null, // 预览路径
-          previewFrameId: null, // 预览框架ID
+          activeFilePath: null,
+          previewFileItemPath: null,
+          previewPath: null,
+          previewFrameId: null,
           totalHash: null,
           isPreviewReady: false,
           hasUnsavedChanges: false,
           isMac: navigator.userAgent.indexOf("Mac") !== -1,
           errorMessage: "",
-          showConfig: false, // 是否显示配置弹窗
-          hideUnimportantFiles: true, // 是否隐藏不重要的文件
+          showConfig: false,
+          hideUnimportantFiles: true,
         },
         watch: {
           theme(theme) {
@@ -401,19 +400,17 @@
             let previewFileData = data.files.find((item) => item.preview);
 
             if (!previewFileData) {
-              // 查不到预览文件，则查找普通文件
               previewFileData = data.files.find(
                 (item) => !item.isPage && !item.isComponent,
               );
               if (previewFileData) {
-                previewFileData.preview = true; // 预览文件
+                previewFileData.preview = true;
               }
             }
 
             if (data.files.length === 1) {
               data.files[0].defaultActive = true;
 
-              // 如果只有一个文件，而且是page模块，则添加辅助加载文件
               if (!previewFileData) {
                 if (data.files[0].isPage) {
                   previewFileData = {
@@ -428,13 +425,12 @@
                   data.files.push(previewFileData);
                 }
               } else {
-                previewFileData.preview = true; // 预览文件
+                previewFileData.preview = true;
               }
             }
 
             this.totalHash = data.totalHash;
 
-            // 传递文件到对面的writer.html
             this.shadow.$("#writer-frame").ele.contentWindow.postMessage(
               {
                 type: "get-file-content",
@@ -449,7 +445,7 @@
               activeFileData = data.files[0];
             }
 
-            this.activeFilePath = activeFileData.path; // 查看代码的文件路径
+            this.activeFilePath = activeFileData.path;
 
             this.fileItems = data.files;
 
@@ -465,7 +461,6 @@
                     this.previewFileItemPath = previewFileData.path;
                     this.previewPath = e.data.href + "/" + previewFileData.path;
                     this.isPreviewReady = true;
-                    // 移除事件监听
                     $(window).off("message", previewUrlHandler);
                     resolve();
                   }
@@ -499,7 +494,6 @@
                 e.data.type === "codeFrameLoaded" &&
                 e.data.totalHash === this.totalHash
               ) {
-                // 发送一次主题色
                 this.sendTheme();
               }
             }),
@@ -507,13 +501,11 @@
 
           let inspectTimer = null;
 
-          // 监听当前组件出现在可视范围时，进行初始化
           this._visibilityObserver = new IntersectionObserver(
             (entries) => {
               entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                   if (this._isComponentVisible) {
-                    // 已经初始化过，不用再执行
                     return;
                   }
 
