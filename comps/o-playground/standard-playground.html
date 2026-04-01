@@ -1,0 +1,536 @@
+<template component>
+  <style>
+    :host {
+      position: relative;
+      display: block;
+      container-type: inline-size;
+      border-radius: 8px;
+      border: 1px solid var(--md-sys-color-primary);
+      overflow: hidden;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      height: 32px;
+      padding: 0 8px;
+      color: var(--md-sys-color-on-primary);
+      background-color: var(--md-sys-color-primary);
+    }
+
+    .top-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 4px;
+      height: 28px;
+      width: 28px;
+      font-size: 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      color: inherit;
+    }
+    .top-btn:hover {
+      color: var(--md-sys-color-primary-container);
+      background-color: var(--md-sys-color-on-primary-container);
+    }
+
+    .content {
+      position: relative;
+      flex: 1;
+    }
+
+    iframe {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--md-sys-color-surface, #f3f3f3);
+      border-top: 2px solid var(--md-sys-color-primary, #3498db);
+      border-radius: 50%;
+      animation: spin 0.5s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .mask {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--md-sys-color-surface);
+      z-index: 3;
+    }
+
+    .hide {
+      display: none;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      flex: 1;
+      height: 100%;
+      user-select: none;
+    }
+    .tab {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 0 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: inherit;
+      margin-right: 2px;
+    }
+
+    .tab:hover {
+      color: var(--md-sys-color-primary-container);
+      background-color: var(--md-sys-color-on-primary-container);
+    }
+
+    .tab.active {
+      color: var(--md-sys-color-primary-container);
+      background-color: var(--md-sys-color-on-primary-container);
+      &:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--md-sys-color-primary-container);
+      }
+    }
+
+    .tab.hide {
+      display: none;
+    }
+
+    .tips {
+      position: absolute;
+      z-index: 3;
+      right: 8px;
+      top: 8px;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease-in-out;
+      padding: 4px 8px;
+      border-radius: 20px;
+      background-color: var(--md-sys-color-primary-container);
+    }
+
+    .hide-tips {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .tips-text {
+      margin-left: 4px;
+      font-size: 12px;
+    }
+  </style>
+  <div class="mask" class:hide="isPreviewReady">
+    <div class="spinner"></div>
+  </div>
+  <o-page id="layout-page" src="./playground-layout.html">
+    <div slot="editor">
+      <div class="top-bar">
+        <div class="tabs">
+          <o-fill :value="fileItems">
+            <div
+              class="tab"
+              on:click="$host.handleTabClick($data)"
+              class:active="$host.activeFilePath === $data.path"
+              class:hide="$host.hideUnimportantFiles && $data.unimportant"
+            >
+              <o-if :value="$host.previewFileItemPath === $data.path">
+                <n-icon
+                  icon="lets-icons:view"
+                  style="margin-right: 4px; font-size: 16px"
+                ></n-icon>
+              </o-if>
+              {{$data.path}}
+            </div>
+          </o-fill>
+        </div>
+        <div class="top-btn" on:click="showConfig = true">
+          <n-icon icon="uil:setting"></n-icon>
+        </div>
+      </div>
+      <div class="content">
+        <div class="tips" class:hide-tips="!hasUnsavedChanges">
+          <n-icon icon="material-symbols:save-outline"></n-icon>
+          <div class="tips-text">
+            <o-if :value="isMac"> cmd + s </o-if>
+            <o-else> ctrl + s </o-else>
+          </div>
+        </div>
+        <o-if :value="isPreviewReady">
+          <iframe
+            attr:src="'./code.html?totalHash=' + totalHash + '&activeFilePath=' + activeFilePath"
+            id="code-frame"
+          ></iframe>
+        </o-if>
+      </div>
+
+      <style>
+        .setting-dialog {
+          position: absolute;
+          z-index: 2;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease-in-out;
+          background-color: rgba(
+            from var(--md-sys-color-normal-container) r g b / 0.8
+          );
+          user-select: none;
+        }
+        .hide {
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .setting-content {
+          padding: 16px;
+          border-radius: 8px;
+        }
+      </style>
+
+      <div
+        class="setting-dialog"
+        on:click="showConfig = false"
+        class:hide="!showConfig"
+      >
+        <div class="setting-content" on:click="$event.stopPropagation()">
+          <label>
+            <input type="checkbox" sync:checked="hideUnimportantFiles" />
+            Hide unimportant files
+          </label>
+          <div>
+            <button on:click="clearEditorResize">Restore Editor Size</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div slot="preview">
+      <div class="top-bar">
+        <o-if :value="previewPath">
+          <div class="top-btn" on:click="handleReloadClick">
+            <n-icon icon="mdi:reload"></n-icon>
+          </div>
+          <div class="top-btn" on:click="handleOpenClick">
+            <n-icon icon="majesticons:open"></n-icon>
+          </div>
+        </o-if>
+      </div>
+      <div class="content">
+        <o-if :value="previewPath">
+          <iframe attr:src="previewPath"></iframe>
+        </o-if>
+        <o-else-if :value="!!previewFrameId">
+          <iframe
+            id="writer-frame"
+            attr:src="'./writer.html?frameId=' + previewFrameId"
+            src="./code.html"
+            on:load="handleWriterFrameLoad"
+          ></iframe>
+        </o-else-if>
+      </div>
+    </div>
+  </o-page>
+
+  <o-consumer name="pui" watch:theme="theme"></o-consumer>
+
+  <script>
+    import {
+      prefixContent,
+      getFileContent,
+      handleOpenClick,
+    } from "./public.js";
+    export default async ({ load, url }) => {
+      const systemInstalled = new Promise((resolve) => {
+        let systemInstalledHandler;
+        window.addEventListener(
+          "message",
+          (systemInstalledHandler = (e) => {
+            if (e.data.type === "system-installed") {
+              writerFrame.remove();
+              window.removeEventListener("message", systemInstalledHandler);
+              resolve();
+            }
+          }),
+        );
+
+        const urlObj = new URL("./writer.html", url);
+        const writerFrame = $(
+          `<iframe src="${urlObj.href}" style="display: none;"></iframe>`,
+        );
+        $("body").push(writerFrame);
+      });
+
+      const localPrefix = location.origin;
+      const remotePrefix = "https://core.noneos.com";
+
+      const iconExists = await fetch(`${localPrefix}/nos/n-icon/n-icon.html`, {
+        method: "HEAD",
+      })
+        .then((r) => r.ok)
+        .catch(() => false);
+
+      const prefix = iconExists ? localPrefix : remotePrefix;
+
+      const [, { getHash }] = await Promise.all([
+        load(`${prefix}/nos/n-icon/n-icon.html`),
+        load(`${prefix}/nos/util/hash/get-hash.js`),
+      ]);
+
+      const { compress, decompress } = await load("../util.js");
+
+      return {
+        tag: "o-standard-playground",
+        attrs: { already: "" },
+        data: {
+          theme: "",
+          fileItems: [],
+          activeFilePath: null,
+          previewFileItemPath: null,
+          previewPath: null,
+          previewFrameId: null,
+          totalHash: null,
+          isPreviewReady: false,
+          hasUnsavedChanges: false,
+          isMac: navigator.userAgent.indexOf("Mac") !== -1,
+          errorMessage: "",
+          showConfig: false,
+          hideUnimportantFiles: true,
+        },
+        watch: {
+          theme(theme) {
+            this.sendTheme();
+          },
+        },
+        proto: {
+          async handleOpenClick() {
+            await handleOpenClick(
+              this.fileItems,
+              this.activeFilePath,
+              compress,
+              this.attr("name"),
+            );
+          },
+          clearEditorResize() {
+            localStorage.removeItem("playground-editor-width");
+
+            this.shadow
+              .$("#layout-page")
+              .shadow.$("#editor-container").style.flex = "";
+          },
+          handleTabClick(tab) {
+            if (tab.active) {
+              return;
+            }
+
+            this.fileItems.forEach((file) => (file.active = false));
+            this.activeFilePath = tab.path;
+          },
+          sendTheme() {
+            this.shadow.$("#code-frame") &&
+              this.shadow.$("#code-frame").ele.contentWindow.postMessage(
+                {
+                  type: "setTheme",
+                  theme: this.theme,
+                },
+                "*",
+              );
+          },
+          handleWriterFrameLoad(e) {
+            if (this._isWriterFrameLoaded) {
+              return;
+            }
+
+            this._isWriterFrameLoaded = true;
+
+            if (this._isComponentVisible) {
+              this.initPreview();
+            }
+          },
+          handleReloadClick() {
+            if (this._isReloadInProgress) {
+              return;
+            }
+            this._isReloadInProgress = true;
+            const url = this.previewPath;
+            this.previewPath = "";
+            setTimeout(() => {
+              this.previewPath = url;
+              this._isReloadInProgress = false;
+            }, 100);
+          },
+          async getFileContent() {
+            return await getFileContent(this.all("code"), getHash);
+          },
+          async initPreview() {
+            const data = await this.getFileContent();
+
+            let previewFileData = data.files.find((item) => item.preview);
+
+            if (!previewFileData) {
+              previewFileData = data.files.find(
+                (item) => !item.isPage && !item.isComponent,
+              );
+              if (previewFileData) {
+                previewFileData.preview = true;
+              }
+            }
+
+            if (data.files.length === 1) {
+              data.files[0].defaultActive = true;
+
+              if (!previewFileData) {
+                if (data.files[0].isPage) {
+                  previewFileData = {
+                    path: "index.html",
+                    content: `${prefixContent}\n<o-page src="./${data.files[0].path}"></o-page>`,
+                    unimportant: true,
+                    isComponent: false,
+                    isPage: false,
+                    preview: true,
+                  };
+
+                  data.files.push(previewFileData);
+                }
+              } else {
+                previewFileData.preview = true;
+              }
+            }
+
+            this.totalHash = data.totalHash;
+
+            this.shadow.$("#writer-frame").ele.contentWindow.postMessage(
+              {
+                type: "get-file-content",
+                data,
+              },
+              "*",
+            );
+
+            let activeFileData = data.files.find((item) => item.defaultActive);
+
+            if (!activeFileData) {
+              activeFileData = data.files[0];
+            }
+
+            this.activeFilePath = activeFileData.path;
+
+            this.fileItems = data.files;
+
+            await new Promise((resolve) => {
+              let previewUrlHandler;
+              $(window).on(
+                "message",
+                (previewUrlHandler = (e) => {
+                  if (
+                    e.data.type === "preview-url" &&
+                    e.data.frameId === this.previewFrameId
+                  ) {
+                    this.previewFileItemPath = previewFileData.path;
+                    this.previewPath = e.data.href + "/" + previewFileData.path;
+                    this.isPreviewReady = true;
+                    $(window).off("message", previewUrlHandler);
+                    resolve();
+                  }
+                }),
+              );
+            });
+          },
+        },
+        async ready() {
+          await systemInstalled;
+          this.previewFrameId = Math.random().toString(36).slice(2);
+        },
+        async attached() {
+          window.addEventListener(
+            "message",
+            (this._messageHandler = (e) => {
+              if (e.data.type === "save-file") {
+                if (e.data.totalHash !== this.totalHash) {
+                  return;
+                }
+
+                this.handleReloadClick();
+                this.hasUnsavedChanges = false;
+              } else if (e.data.type === "change-file") {
+                if (e.data.totalHash !== this.totalHash) {
+                  return;
+                }
+
+                this.hasUnsavedChanges = e.data.isChanged;
+              } else if (
+                e.data.type === "codeFrameLoaded" &&
+                e.data.totalHash === this.totalHash
+              ) {
+                this.sendTheme();
+              }
+            }),
+          );
+
+          let inspectTimer = null;
+
+          this._visibilityObserver = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  if (this._isComponentVisible) {
+                    return;
+                  }
+
+                  inspectTimer = setTimeout(() => {
+                    if (this._isWriterFrameLoaded) {
+                      this.initPreview();
+                    }
+                    this._visibilityObserver.disconnect();
+                    this._isComponentVisible = true;
+                  }, 300);
+                } else {
+                  clearTimeout(inspectTimer);
+                }
+              });
+            },
+            { threshold: 0.1 },
+          );
+          this._visibilityObserver.observe(this.ele);
+        },
+        detached() {
+          this._messageHandler &&
+            window.removeEventListener("message", this._messageHandler);
+          this._visibilityObserver && this._visibilityObserver.disconnect();
+        },
+      };
+    };
+  </script>
+</template>
