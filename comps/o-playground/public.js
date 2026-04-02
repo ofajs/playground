@@ -47,9 +47,8 @@ export const getLanguageFromPath = (path) => {
 
 export const formatCode = async (content, language) => {
   try {
-    const { default: jsBeautify } = await import(
-      "https://cdn.jsdelivr.net/npm/js-beautify@1.15.1/+esm"
-    );
+    const { default: jsBeautify } =
+      await import("https://cdn.jsdelivr.net/npm/js-beautify@1.15.1/+esm");
 
     if (language === "html" || language === "xml") {
       return jsBeautify.html(content, {
@@ -175,7 +174,9 @@ export const getFileContent = async (codes, getHash) => {
       .filter((item) => !!item),
   );
 
-  const totalHash = await getHash(files.map((item) => item.contentHash).join(""));
+  const totalHash = await getHash(
+    files.map((item) => item.contentHash).join(""),
+  );
 
   return {
     files,
@@ -183,7 +184,12 @@ export const getFileContent = async (codes, getHash) => {
   };
 };
 
-export const handleOpenClick = async (fileItems, activeFilePath, compress, nameAttr) => {
+export const handleOpenClick = async (
+  fileItems,
+  activeFilePath,
+  compress,
+  nameAttr,
+) => {
   const files = fileItems.map((item) => ({
     p: item.path,
     c: item.content,
@@ -198,10 +204,12 @@ export const handleOpenClick = async (fileItems, activeFilePath, compress, nameA
   const str = JSON.stringify(redata);
 
   const compressedStr = await compress(str);
+  const url = location.host.includes("localhost:4002")
+    ? `/?redirect=w&d=${compressedStr}`
+    : `https://playground.ofajs.com/?redirect=w&d=${compressedStr}`;
 
-  if (location.host.includes("localhost:4002")) {
-    window.open(`/?redirect=w&d=${compressedStr}`);
-  } else {
-    window.open(`https://playground.ofajs.com/?redirect=w&d=${compressedStr}`);
-  }
+  const link = document.createElement("a");
+  link.href = url;
+  link.target = "_blank";
+  link.click();
 };
