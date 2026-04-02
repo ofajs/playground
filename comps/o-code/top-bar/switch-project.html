@@ -53,9 +53,19 @@
   </style>
 
   <p-dialog :open="open" on:click-mask="open = false">
-    <div slot="title">创建/切换项目</div>
+    <div slot="title">
+      <locale-text>
+        <span lang="cn">创建/切换项目</span>
+        <span lang="en">Create/Switch Project</span>
+      </locale-text>
+    </div>
     <div class="container">
-      <h4>创建项目</h4>
+      <h4>
+        <locale-text>
+          <span lang="cn">创建项目</span>
+          <span lang="en">Create Project</span>
+        </locale-text>
+      </h4>
       <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0">
         <o-fill :value="temps">
           <div
@@ -73,7 +83,12 @@
           sync:value="newProjectName"
           style="flex: 1"
         >
-          <label> 输入新项目名称 </label>
+          <label>
+            <locale-text>
+              <span lang="cn">输入新项目名称</span>
+              <span lang="en">Enter new project name</span>
+            </locale-text>
+          </label>
         </p-input>
         <p-button
           attr:disabled="!newProjectName || creating"
@@ -81,10 +96,18 @@
           on:click="createProject"
         >
           <n-icon icon="material-symbols:add-rounded" slot="prefix"></n-icon>
-          确认创建
+          <locale-text>
+            <span lang="cn">确认创建</span>
+            <span lang="en">Create</span>
+          </locale-text>
         </p-button>
       </div>
-      <h4>已有的项目</h4>
+      <h4>
+        <locale-text>
+          <span lang="cn">已有的项目</span>
+          <span lang="en">Existing Projects</span>
+        </locale-text>
+      </h4>
       <p-list style="max-height: 40vh; overflow-y: auto">
         <o-fill :value="list">
           <p-list-item
