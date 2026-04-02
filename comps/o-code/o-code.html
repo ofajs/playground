@@ -145,6 +145,8 @@
   </o-provider>
   <script>
     export default async ({ load }) => {
+      load("/nos/locale-text/locale-text.html");
+
       return {
         tag: "o-code",
         attrs: {
