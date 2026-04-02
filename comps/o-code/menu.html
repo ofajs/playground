@@ -172,9 +172,10 @@
             if (exitHandle) {
               toast({
                 color: "error",
-                message:
-                  "目标目录下已存在相同名称的" +
-                  (exitHandle.kind === "file" ? "文件" : "目录"),
+                message: await getLocaleText({
+                  cn: "目标目录下已存在相同名称的" + (exitHandle.kind === "file" ? "文件" : "目录"),
+                  en: "A " + (exitHandle.kind === "file" ? "file" : "directory") + " with the same name already exists in the target directory",
+                }),
               });
               return;
             }
@@ -193,9 +194,18 @@
             this.openMenu = false;
 
             const result = await prompt({
-              title: "创建" + (type === "file" ? "文件" : "目录"),
-              message: `在 ${this.path} 创建${type === "file" ? "文件" : "目录"}`,
-              label: `请输入${type === "file" ? "文件" : "目录"}名称`,
+              title: await getLocaleText({
+                cn: "创建" + (type === "file" ? "文件" : "目录"),
+                en: "Create " + (type === "file" ? "File" : "Directory"),
+              }),
+              message: await getLocaleText({
+                cn: `在 ${this.path} 创建${type === "file" ? "文件" : "目录"}`,
+                en: `Create ${type === "file" ? "file" : "directory"} in ${this.path}`,
+              }),
+              label: await getLocaleText({
+                cn: `请输入${type === "file" ? "文件" : "目录"}名称`,
+                en: `Enter ${type === "file" ? "file" : "directory"} name`,
+              }),
             });
 
             if (!result) {
@@ -213,9 +223,10 @@
             if (exitHandle) {
               toast({
                 color: "error",
-                message:
-                  "目标目录下已存在相同名称的" +
-                  (exitHandle.kind === "file" ? "文件" : "目录"),
+                message: await getLocaleText({
+                  cn: "目标目录下已存在相同名称的" + (exitHandle.kind === "file" ? "文件" : "目录"),
+                  en: "A " + (exitHandle.kind === "file" ? "file" : "directory") + " with the same name already exists in the target directory",
+                }),
               });
               return;
             }
@@ -266,7 +277,10 @@
             if (equalNameFile) {
               toast({
                 color: "error",
-                message: "目标目录下已存在相同名称文件或目录",
+                message: await getLocaleText({
+                  cn: "目标目录下已存在相同名称文件或目录",
+                  en: "A file or directory with the same name already exists in the target directory",
+                }),
               });
               return;
             }
@@ -307,8 +321,14 @@
             const path = this.path.split("/").slice(2).join("/");
 
             const result = await confirm({
-              title: "删除确认",
-              message: `确定删除 ${path} 吗？该操作不可撤销`,
+              title: await getLocaleText({
+                cn: "删除确认",
+                en: "Confirm Delete",
+              }),
+              message: await getLocaleText({
+                cn: `确定删除 ${path} 吗？该操作不可撤销`,
+                en: `Are you sure you want to delete ${path}? This action cannot be undone.`,
+              }),
             });
 
             if (!result) {
