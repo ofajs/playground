@@ -229,10 +229,18 @@
         <div class="setting-content" on:click="$event.stopPropagation()">
           <label>
             <input type="checkbox" sync:checked="hideUnimportantFiles" />
-            Hide unimportant files
+            <locale-text>
+              <span lang="cn"> 隐藏不重要文件 </span>
+              <span lang="en"> Hide unimportant files </span>
+            </locale-text>
           </label>
           <div>
-            <button on:click="clearEditorResize">Restore Editor Size</button>
+            <button on:click="clearEditorResize">
+              <locale-text>
+                <span lang="cn"> 恢复编辑器宽度 </span>
+                <span lang="en"> Restore Editor Width </span>
+              </locale-text>
+            </button>
           </div>
         </div>
       </div>
@@ -307,6 +315,7 @@
       const [, { getHash }] = await Promise.all([
         load(`${prefix}/nos/n-icon/n-icon.html`),
         load(`${prefix}/nos/util/hash/get-hash.js`),
+        load(`${prefix}/nos/locale-text/locale-text.html`),
       ]);
 
       const { compress, decompress } = await load("../util.js");
