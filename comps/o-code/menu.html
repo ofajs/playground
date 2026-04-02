@@ -117,6 +117,10 @@
         "/gh/ofajs/Punch-UI/packages/util.js",
       );
 
+      const { getLocaleText } = await load(
+        "/nos/locale-text/get-locale-text.js",
+      );
+
       return {
         data: {
           openMenu: false,
@@ -145,9 +149,18 @@
             const parentHandle = handle.parent;
 
             const result = await prompt({
-              title: "重命名",
-              message: `重命名 ${this.path}`,
-              label: "请输入新名称",
+              title: await getLocaleText({
+                cn: "重命名",
+                en: "Rename",
+              }),
+              message: await getLocaleText({
+                cn: `重命名 ${this.path}`,
+                en: `Rename ${this.path}`,
+              }),
+              label: await getLocaleText({
+                cn: "请输入新名称",
+                en: "Enter new name",
+              }),
               value: handle.name,
             });
 
