@@ -173,7 +173,7 @@
     <div class="tabs">
       <o-fill :value="fileItems">
         <div
-          class="tab"
+          class="tab" 
           on:click="$host.handleTabClick($data)"
           class:active="$host.activeFilePath === $data.path"
           class:hide="$host.hideUnimportantFiles && $data.unimportant"
@@ -182,9 +182,7 @@
         </div>
       </o-fill>
     </div>
-    <div class="top-btn" on:click="showConfig = true">
-      <n-icon icon="uil:setting"></n-icon>
-    </div>
+
   </div>
 
   <div class="content">
@@ -198,41 +196,7 @@
     </div>
   </div>
 
-  <style>
-    .setting-dialog {
-      position: absolute;
-      z-index: 2;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease-in-out;
-      background-color: rgba(
-        from var(--md-sys-color-normal-container) r g b / 0.8
-      );
-      user-select: none;
-    }
 
-    .setting-content {
-      padding: 16px;
-      border-radius: 8px;
-      background-color: var(--md-sys-color-surface);
-    }
-  </style>
-
-  <div
-    class="setting-dialog"
-    on:click="showConfig = false"
-    class:hide="!showConfig"
-  >
-    <div class="setting-content" on:click="$event.stopPropagation()">
-      <label>
-        <input type="checkbox" sync:checked="hideUnimportantFiles" />
-        Hide unimportant files
-      </label>
-    </div>
-  </div>
 
   <o-consumer name="pui" watch:theme="theme"></o-consumer>
 
