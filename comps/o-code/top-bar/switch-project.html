@@ -53,9 +53,19 @@
   </style>
 
   <p-dialog :open="open" on:click-mask="open = false">
-    <div slot="title">创建/切换项目</div>
+    <div slot="title">
+      <locale-text>
+        <span lang="cn">创建/切换项目</span>
+        <span lang="en">Create/Switch Project</span>
+      </locale-text>
+    </div>
     <div class="container">
-      <h4>创建项目</h4>
+      <h4>
+        <locale-text>
+          <span lang="cn">创建项目</span>
+          <span lang="en">Create Project</span>
+        </locale-text>
+      </h4>
       <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0">
         <o-fill :value="temps">
           <div
@@ -73,7 +83,12 @@
           sync:value="newProjectName"
           style="flex: 1"
         >
-          <label> 输入新项目名称 </label>
+          <label>
+            <locale-text>
+              <span lang="cn">输入新项目名称</span>
+              <span lang="en">Enter new project name</span>
+            </locale-text>
+          </label>
         </p-input>
         <p-button
           attr:disabled="!newProjectName || creating"
@@ -81,10 +96,18 @@
           on:click="createProject"
         >
           <n-icon icon="material-symbols:add-rounded" slot="prefix"></n-icon>
-          确认创建
+          <locale-text>
+            <span lang="cn">确认创建</span>
+            <span lang="en">Create</span>
+          </locale-text>
         </p-button>
       </div>
-      <h4>已有的项目</h4>
+      <h4>
+        <locale-text>
+          <span lang="cn">已有的项目</span>
+          <span lang="en">Existing Projects</span>
+        </locale-text>
+      </h4>
       <p-list style="max-height: 40vh; overflow-y: auto">
         <o-fill :value="list">
           <p-list-item
@@ -142,6 +165,10 @@
         "../../../../code/util/reset-project-file.js",
       );
 
+      const { getLocaleText } = await load(
+        "/nos/locale-text/get-locale-text.js",
+      );
+
       const resolve = (path) => {
         const urlObj = new URL(path, url);
         return urlObj.href;
@@ -157,15 +184,24 @@
           tempIndex: 0,
           temps: [
             {
-              name: "静态页面案例",
+              name: await getLocaleText({
+                cn: "静态页面案例",
+                en: "Static Page Template",
+              }),
               path: "../template/static",
             },
             {
-              name: "ofa.js页面模块案例",
+              name: await getLocaleText({
+                cn: "ofa.js页面模块案例",
+                en: "ofa.js Page Module Template",
+              }),
               path: "../template/page-case",
             },
             {
-              name: "ofa.js应用案例",
+              name: await getLocaleText({
+                cn: "ofa.js应用案例",
+                en: "ofa.js App Template",
+              }),
               path: "../template/app-case",
             },
           ],
@@ -227,8 +263,14 @@
             event.preventDefault();
 
             const result = await confirm({
-              title: "删除项目",
-              message: `确定要删除项目 "${item.name}" 吗？此操作无法撤销。`,
+              title: await getLocaleText({
+                cn: "删除项目",
+                en: "Delete Project",
+              }),
+              message: await getLocaleText({
+                cn: `确定要删除项目 "${item.name}" 吗？此操作无法撤销。`,
+                en: `Are you sure you want to delete project "${item.name}"? This action cannot be undone.`,
+              }),
             });
 
             if (!result) {
@@ -252,7 +294,13 @@
 
               await this.loadProject();
             } catch (error) {
-              console.error("删除项目失败:", error);
+              console.error(
+                await getLocaleText({
+                  cn: "删除项目失败:",
+                  en: "Failed to delete project:",
+                }),
+                error,
+              );
             }
           },
           async restoreCode(item, event) {
@@ -260,9 +308,14 @@
             event.preventDefault();
 
             const result = await confirm({
-              title: "还原代码",
-              message:
-                "确定要还原这个项目的代码吗？代码将被覆盖，此操作无法撤销。",
+              title: await getLocaleText({
+                cn: "还原代码",
+                en: "Restore Code",
+              }),
+              message: await getLocaleText({
+                cn: "确定要还原这个项目的代码吗？代码将被覆盖，此操作无法撤销。",
+                en: "Are you sure you want to restore the code for this project? The code will be overwritten and this action cannot be undone.",
+              }),
             });
 
             if (!result) {

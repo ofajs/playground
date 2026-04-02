@@ -76,7 +76,12 @@
     <div class="logo-text-wrapper">
       <div class="logo-text">OFA Playground</div>
       <div class="project-title">{{title}}</div>
-      <span class="logo-sub-text">创建/切换项目</span>
+      <span class="logo-sub-text">
+        <locale-text>
+          <span lang="cn">创建/切换项目</span>
+          <span lang="en">Create/Switch Project</span>
+        </locale-text>
+      </span>
     </div>
   </div>
   <p-button
@@ -90,14 +95,20 @@
   </p-button>
   <p-button variant="text" on:click="clickPreviewBtn" size="small">
     <n-icon icon="material-symbols:preview" slot="prefix"></n-icon>
-    预览
+    <locale-text>
+      <span lang="cn">预览</span>
+      <span lang="en">Preview</span>
+    </locale-text>
   </p-button>
 
   <div style="flex: 1"></div>
 
   <p-button variant="outlined" size="small" on:click="clickDownloadBtn">
     <n-icon icon="mdi:download" slot="prefix"></n-icon>
-    下载项目
+    <locale-text>
+      <span lang="cn">下载项目</span>
+      <span lang="en">Download</span>
+    </locale-text>
   </p-button>
 
   <p-button
@@ -106,7 +117,10 @@
     style="margin-right: 16px"
   >
     <n-icon icon="ic:twotone-share" slot="prefix"></n-icon>
-    发布
+    <locale-text>
+      <span lang="cn">发布</span>
+      <span lang="en">Share</span>
+    </locale-text>
   </p-button>
 
   <o-consumer

@@ -27,9 +27,19 @@
     }
   </style>
   <p-dialog :open="open" on:click-mask="open = false">
-    <div slot="title">分享代码</div>
+    <div slot="title">
+      <locale-text>
+        <span lang="cn">分享代码</span>
+        <span lang="en">Share Code</span>
+      </locale-text>
+    </div>
     <div class="container">
-      <p>你可以直接复制以下链接分享给他人</p>
+      <p>
+        <locale-text>
+          <span lang="cn">你可以直接复制以下链接分享给他人</span>
+          <span lang="en">You can copy the link below to share with others</span>
+        </locale-text>
+      </p>
       <div class="link-container">{{ shareLink }}</div>
       <p-button
         variant="outlined"
@@ -38,10 +48,18 @@
         attr:disabled="copied"
         attr:color="copied ? 'success' : 'primary'"
       >
-        <x-if :value="!copied"> 复制链接 </x-if>
+        <x-if :value="!copied">
+          <locale-text>
+            <span lang="cn">复制链接</span>
+            <span lang="en">Copy Link</span>
+          </locale-text>
+        </x-if>
         <x-else>
           <n-icon slot="prefix" icon="ix:success"></n-icon>
-          已复制
+          <locale-text>
+            <span lang="cn">已复制</span>
+            <span lang="en">Copied</span>
+          </locale-text>
         </x-else>
       </p-button>
     </div>

@@ -96,6 +96,8 @@
     .preview-container {
       flex: 0 0 300px;
       display: flex;
+      flex-direction: column;
+      font-size: 14px;
       padding: 16px;
       align-items: center;
       justify-content: center;
@@ -182,9 +184,6 @@
         </div>
       </o-fill>
     </div>
-    <div class="top-btn" on:click="showConfig = true">
-      <n-icon icon="uil:setting"></n-icon>
-    </div>
   </div>
 
   <div class="content">
@@ -192,45 +191,22 @@
       <pre class="code-block"><code id="code-display" class="hljs"></code></pre>
     </div>
     <div class="preview-container">
+      <locale-text>
+        <p lang="cn">
+          由于 Safari 浏览器的安全限制，无法在此直接预览页面。
+          请点击下方按钮，在新标签页中查看效果。
+        </p>
+        <p lang="en">
+          Due to security restrictions, the preview cannot be displayed in
+          Safari. Please click the button below to view the effect in a new tab.
+        </p>
+      </locale-text>
       <button class="open-btn" on:click="handleOpenClick">
-        在 Playground 中打开
+        <locale-text>
+          <span lang="cn"> 在 Playground 中打开 </span>
+          <span lang="en"> Open in Playground </span>
+        </locale-text>
       </button>
-    </div>
-  </div>
-
-  <style>
-    .setting-dialog {
-      position: absolute;
-      z-index: 2;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease-in-out;
-      background-color: rgba(
-        from var(--md-sys-color-normal-container) r g b / 0.8
-      );
-      user-select: none;
-    }
-
-    .setting-content {
-      padding: 16px;
-      border-radius: 8px;
-      background-color: var(--md-sys-color-surface);
-    }
-  </style>
-
-  <div
-    class="setting-dialog"
-    on:click="showConfig = false"
-    class:hide="!showConfig"
-  >
-    <div class="setting-content" on:click="$event.stopPropagation()">
-      <label>
-        <input type="checkbox" sync:checked="hideUnimportantFiles" />
-        Hide unimportant files
-      </label>
     </div>
   </div>
 
@@ -265,6 +241,7 @@
       const [, { getHash }] = await Promise.all([
         load(`${prefix}/nos/n-icon/n-icon.html`),
         load(`${prefix}/nos/util/hash/get-hash.js`),
+        load(`${prefix}/nos/locale-text/locale-text.html`),
       ]);
 
       const { compress, decompress } = await load("../util.js");
