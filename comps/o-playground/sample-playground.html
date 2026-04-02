@@ -96,6 +96,8 @@
     .preview-container {
       flex: 0 0 300px;
       display: flex;
+      flex-direction: column;
+      font-size: 14px;
       padding: 16px;
       align-items: center;
       justify-content: center;
@@ -173,7 +175,7 @@
     <div class="tabs">
       <o-fill :value="fileItems">
         <div
-          class="tab" 
+          class="tab"
           on:click="$host.handleTabClick($data)"
           class:active="$host.activeFilePath === $data.path"
           class:hide="$host.hideUnimportantFiles && $data.unimportant"
@@ -182,7 +184,6 @@
         </div>
       </o-fill>
     </div>
-
   </div>
 
   <div class="content">
@@ -190,13 +191,15 @@
       <pre class="code-block"><code id="code-display" class="hljs"></code></pre>
     </div>
     <div class="preview-container">
+      <p>
+        由于 Safari 浏览器的安全限制，无法在此直接预览页面。
+        请点击下方按钮，在新标签页中查看效果。
+      </p>
       <button class="open-btn" on:click="handleOpenClick">
         在 Playground 中打开
       </button>
     </div>
   </div>
-
-
 
   <o-consumer name="pui" watch:theme="theme"></o-consumer>
 
