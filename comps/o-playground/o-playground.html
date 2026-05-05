@@ -6,26 +6,14 @@
   </style>
   <div class="container"></div>
   <script>
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
     export default async ({ load, url }) => {
-      // safari 无法满足 iframe内嵌套的 none-core运行，所以被迫使用 sample 版本
-      let componentSrc = "./standard-playground.html";
+      const { isUseSamplePlayground } = await load("./public.js");
+      const useSample = await isUseSamplePlayground();
+      const componentSrc = useSample
+        ? "./sample-playground.html"
+        : "./standard-playground.html";
 
-      (async () => {
-        if (isSafari) {
-          // 尝试请求本地api是否可用
-          const config = await fetch("/__config")
-            .then((res) => res.json())
-            .catch(() => null);
-
-          if (!config) {
-            componentSrc = "./sample-playground.html";
-          }
-        }
-
-        load(componentSrc);
-      })();
+      load(componentSrc);
 
       return {
         tag: "o-playground",
@@ -34,7 +22,7 @@
         },
         data: {},
         async attached() {
-          const targetTag = isSafari
+          const targetTag = useSample
             ? "o-sample-playground"
             : "o-standard-playground";
 
