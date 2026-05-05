@@ -10,11 +10,22 @@
 
     export default async ({ load, url }) => {
       // safari 无法满足 iframe内嵌套的 none-core运行，所以被迫使用 sample 版本
-      const componentSrc = isSafari
-        ? "./sample-playground.html"
-        : "./standard-playground.html";
+      let componentSrc = "./standard-playground.html";
 
-      load(componentSrc);
+      (async () => {
+        if (isSafari) {
+          // 尝试请求本地api是否可用
+          const config = await fetch("/__config")
+            .then((res) => res.json())
+            .catch(() => null);
+
+          if (!config) {
+            componentSrc = "./sample-playground.html";
+          }
+        }
+
+        load(componentSrc);
+      })();
 
       return {
         tag: "o-playground",

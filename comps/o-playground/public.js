@@ -213,3 +213,24 @@ export const handleOpenClick = async (
   link.target = "_blank";
   link.click();
 };
+
+// 判断是否需要使用 sample 版本的 playground
+// 针对 safari 无法在 iframe内嵌套的 none-core运行，所以被迫使用 sample 版本
+// 所以这里判断是否需要使用 sample 版本的 playground
+export const isUseSamplePlayground = async () => {
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  if (isSafari) {
+    // 尝试请求本地api是否可用
+    const config = await fetch("/__config")
+      .then((res) => res.json())
+      .catch(() => null);
+
+    if (!config) {
+      // safari浏览器，并且本地api不可用，则使用 sample 版本的 playground
+      return true;
+    }
+  }
+
+  return false;
+};
