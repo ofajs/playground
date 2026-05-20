@@ -109,7 +109,10 @@
 
             const processDir = async (dirHandle, basePath) => {
               for await (let handle of dirHandle.values()) {
-                if (handle.name.startsWith(".") || skipDirs.includes(handle.name)) {
+                if (
+                  handle.name.startsWith(".") ||
+                  skipDirs.includes(handle.name)
+                ) {
                   continue;
                 }
 
@@ -131,8 +134,6 @@
               files,
               active: files[0].p,
             };
-
-            debugger;
 
             const compressedStr = await compress(JSON.stringify(data));
 
