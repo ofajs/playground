@@ -48,25 +48,66 @@
         width: 100%;
         max-width: 800px;
       }
+
+      .main-content {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .main-content.visible {
+        opacity: 1;
+      }
+
+      .loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--md-sys-color-surface-container-high);
+        border-top-color: var(--md-sys-color-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
-  <div class="page-header">
-    <h1>🚀 Ofa Playground</h1>
-    <p>
-      <locale-text>
-        <span lang="cn">创建和管理你的 ofa.js 项目</span>
-        <span lang="en">Create and manage your ofa.js projects</span>
-      </locale-text>
-    </p>
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <p style="color: var(--md-sys-color-on-surface-variant); margin: 0;">Loading...</p>
   </div>
-  <o-page src="/comps/o-code/top-bar/project-form.html"></o-page>
+  <div class="main-content" id="mainContent">
+    <div class="page-header">
+      <h1>🚀 Ofa Playground</h1>
+      <p>
+        <locale-text>
+          <span lang="cn">创建和管理你的 ofa.js 项目</span>
+          <span lang="en">Create and manage your ofa.js projects</span>
+        </locale-text>
+      </p>
+    </div>
+    <o-page src="/comps/o-code/top-bar/project-form.html"></o-page>
+  </div>
   <nos-version auto-install></nos-version>
   <body>
     <script type="module">
       const load = lm(import.meta);
 
       $("nos-version").on("installed", () => {
-        // 判断并重定向
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("mainContent").classList.add("visible");
+
         const params = new URLSearchParams(location.search);
         const redirect = params.get("redirect");
         if (redirect === "w") {
