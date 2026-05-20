@@ -13,7 +13,52 @@
       rel="stylesheet"
       href="https://core.noneos.com/nos-tool/css/theme.css"
     />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, var(--md-sys-color-surface-container-low) 0%, var(--md-sys-color-surface-container) 100%);
+        padding: 24px;
+        box-sizing: border-box;
+      }
+
+      .page-header {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .page-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 32px;
+        font-weight: 500;
+        color: var(--md-sys-color-on-surface);
+      }
+
+      .page-header p {
+        margin: 0;
+        color: var(--md-sys-color-on-surface-variant);
+        font-size: 14px;
+      }
+
+      o-page {
+        width: 100%;
+        max-width: 800px;
+      }
+    </style>
   </head>
+  <div class="page-header">
+    <h1>🚀 Ofa Playground</h1>
+    <p>
+      <locale-text>
+        <span lang="cn">创建和管理你的 ofa.js 项目</span>
+        <span lang="en">Create and manage your ofa.js projects</span>
+      </locale-text>
+    </p>
+  </div>
   <o-page src="/comps/o-code/top-bar/project-form.html"></o-page>
   <nos-version auto-install></nos-version>
   <body>
