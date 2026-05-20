@@ -3,6 +3,7 @@
   <l-m src="/gh/ofajs/Punch-UI/packages/button/button.html"></l-m>
   <l-m src="/gh/ofajs/Punch-UI/packages/list/list.html"></l-m>
   <l-m src="/nos/n-icon/n-icon.html"></l-m>
+  <l-m src="/nos/locale-text/locale-text.html"></l-m>
   <style>
     :host {
       display: block;
@@ -322,6 +323,15 @@
                 path: item.path,
               },
             });
+
+            const projectHash = item.path.split("/").pop();
+            const isInCode = location.pathname.includes("/code/");
+            const targetPath = isInCode
+              ? location.pathname
+              : location.pathname
+                  .replace(/\/index\.html$/, "")
+                  .replace(/\/$/, "") + "/code/index.html";
+            location.href = `${location.origin}${targetPath}?h=${projectHash}`;
           },
           async loadProject() {
             const handle = await get("code-projects");

@@ -26,13 +26,8 @@
           open: false,
         },
         proto: {
-          handleProjectSelected(e) {
-            const { path } = e.data;
+          handleProjectSelected() {
             this.open = false;
-
-            const projectHash = path.split("/").pop();
-
-            location.href = `${location.origin + location.pathname}?h=${projectHash}`;
           },
         },
       };
