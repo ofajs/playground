@@ -105,19 +105,21 @@
         </locale-text>
       </p-button>
     </div>
-    <div style="padding-left: 4px">
-      <p-button
-        variant="outlined"
-        on:click="mountLocalDir"
-        attr:disabled="creating"
-      >
-        <n-icon icon="material-symbols:folder-open" slot="prefix"></n-icon>
-        <locale-text>
-          <span lang="cn">打开本地目录</span>
-          <span lang="en">Open Local Directory</span>
-        </locale-text>
-      </p-button>
-    </div>
+    <o-if :value="canMount">
+      <div style="padding-left: 4px">
+        <p-button
+          variant="outlined"
+          on:click="mountLocalDir"
+          attr:disabled="creating"
+        >
+          <n-icon icon="material-symbols:folder-open" slot="prefix"></n-icon>
+          <locale-text>
+            <span lang="cn">打开本地目录</span>
+            <span lang="en">Open Local Directory</span>
+          </locale-text>
+        </p-button>
+      </div>
+    </o-if>
     <h4>
       <locale-text>
         <span lang="cn">已有的项目</span>
@@ -175,9 +177,7 @@
   <script>
     export default async ({ load, url }) => {
       const { get } = await load("/nos/fs/main.js");
-      const { mount, save, unmount } = await load(
-        "/nos/fs/handle/mount/mount.js",
-      );
+      const { open, unmount } = await load("/nos/fs/handle/mount/mount.js");
       const { confirm } = await load("/gh/ofajs/Punch-UI/packages/util.js");
       const { resetProjectFile } = await load(
         "../../../../code/util/reset-project-file.js",
@@ -222,12 +222,39 @@
               path: "../template/app-case",
             },
           ],
+          canMount: !!window.showDirectoryPicker,
         },
         proto: {
+          async getMountList() {},
           async mountLocalDir() {
-            const handle = await mount({
-              save: true,
+            const handle = await open({
+              mount: true,
             });
+
+            {
+              // 保存本地项目
+              let localProject = localStorage.getItem("localPlaygroundProject");
+              if (!localProject) {
+                localProject = [];
+              } else {
+                localProject = JSON.parse(localProject);
+              }
+
+              // 检查是否已存在相同路径的项目
+              const exists = localProject.some((p) => p.path === handle.path);
+              if (!exists) {
+                localProject.push({
+                  path: handle.path,
+                  name: handle.name,
+                  fromPlayground: true,
+                });
+              }
+
+              localStorage.setItem(
+                "localPlaygroundProject",
+                JSON.stringify(localProject),
+              );
+            }
 
             debugger;
           },
