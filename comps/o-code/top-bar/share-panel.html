@@ -37,7 +37,9 @@
       <p>
         <locale-text>
           <span lang="cn">你可以直接复制以下链接分享给他人</span>
-          <span lang="en">You can copy the link below to share with others</span>
+          <span lang="en"
+            >You can copy the link below to share with others</span
+          >
         </locale-text>
       </p>
       <div class="link-container">{{ shareLink }}</div>
@@ -99,29 +101,37 @@
             }, 1000);
           },
           async loadCode() {
-            // 获取项目文件
             const projectHandle = await get(this.projectPath);
 
             const files = [];
-            for await (let handle of projectHandle.values()) {
-              if (handle.name === "node_modules") {
-                continue;
-              }
+            const skipDirs = ["node_modules", ".git"];
 
-              if (handle.kind === "file") {
-                const content = await handle.text();
+            const processDir = async (dirHandle, basePath) => {
+              for await (let handle of dirHandle.values()) {
+                if (skipDirs.includes(handle.name)) {
+                  continue;
+                }
 
-                files.push({
-                  p: handle.path.replace(this.projectPath + "/", ""),
-                  c: content,
-                });
+                if (handle.kind === "file") {
+                  const content = await handle.text();
+                  files.push({
+                    p: handle.path.replace(this.projectPath + "/", ""),
+                    c: content,
+                  });
+                } else if (handle.kind === "dir") {
+                  await processDir(handle, handle.path);
+                }
               }
-            }
+            };
+
+            await processDir(projectHandle, this.projectPath);
 
             const data = {
               files,
               active: files[0].p,
             };
+
+            debugger;
 
             const compressedStr = await compress(JSON.stringify(data));
 
