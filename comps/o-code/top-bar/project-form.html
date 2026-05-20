@@ -11,6 +11,7 @@
 
     .container {
       border-radius: 16px;
+      min-width: 50vw;
       overflow: auto;
       cursor: default;
     }
@@ -104,6 +105,19 @@
         </locale-text>
       </p-button>
     </div>
+    <div style="padding-left: 4px">
+      <p-button
+        variant="outlined"
+        on:click="mountLocalDir"
+        attr:disabled="creating"
+      >
+        <n-icon icon="material-symbols:folder-open" slot="prefix"></n-icon>
+        <locale-text>
+          <span lang="cn">打开本地目录</span>
+          <span lang="en">Open Local Directory</span>
+        </locale-text>
+      </p-button>
+    </div>
     <h4>
       <locale-text>
         <span lang="cn">已有的项目</span>
@@ -161,6 +175,9 @@
   <script>
     export default async ({ load, url }) => {
       const { get } = await load("/nos/fs/main.js");
+      const { mount, save, unmount } = await load(
+        "/nos/fs/handle/mount/mount.js",
+      );
       const { confirm } = await load("/gh/ofajs/Punch-UI/packages/util.js");
       const { resetProjectFile } = await load(
         "../../../../code/util/reset-project-file.js",
@@ -207,6 +224,13 @@
           ],
         },
         proto: {
+          async mountLocalDir() {
+            const handle = await mount({
+              save: true,
+            });
+
+            debugger;
+          },
           async createProject() {
             this.creating = true;
 
