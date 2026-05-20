@@ -11,7 +11,6 @@
 
     .container {
       border-radius: 16px;
-      min-width: 50vw;
       overflow: auto;
       cursor: default;
     }
@@ -195,7 +194,9 @@
     export default async ({ load, url }) => {
       const { get } = await load("/nos/fs/main.js");
       const { open, unmount } = await load("/nos/fs/handle/mount/mount.js");
-      const { confirm } = await load("/gh/ofajs/Punch-UI/packages/util.js");
+      const { confirm, toast } = await load(
+        "/gh/ofajs/Punch-UI/packages/util.js",
+      );
       const { resetProjectFile } = await load(
         "../../../../code/util/reset-project-file.js",
       );
@@ -271,7 +272,13 @@
 
               await this.loadProject();
             } catch (error) {
-              console.error("Failed to mount local directory:", error);
+              toast({
+                color: "error",
+                message: await getLocaleText({
+                  cn: "挂载本地目录失败",
+                  en: "Failed to mount local directory",
+                }),
+              });
             }
           },
           async unmountLocalProject(item, event) {
@@ -294,7 +301,9 @@
             }
 
             try {
-              await unmount(item.path);
+              const handle = await get(item.path);
+
+              await unmount(handle);
 
               let localProject = localStorage.getItem("localPlaygroundProject");
               if (localProject) {
@@ -308,7 +317,13 @@
 
               await this.loadProject();
             } catch (error) {
-              console.error("Failed to unmount local directory:", error);
+              toast({
+                color: "error",
+                message: await getLocaleText({
+                  cn: "解除挂载本地目录失败: " + error.message,
+                  en: "Failed to unmount local directory: " + error.message,
+                }),
+              });
             }
           },
           async createProject() {
@@ -393,13 +408,13 @@
 
               await this.loadProject();
             } catch (error) {
-              console.error(
-                await getLocaleText({
-                  cn: "删除项目失败:",
-                  en: "Failed to delete project:",
+              toast({
+                color: "error",
+                message: await getLocaleText({
+                  cn: "删除项目失败",
+                  en: "Failed to delete project",
                 }),
-                error,
-              );
+              });
             }
           },
           async restoreCode(item, event) {
@@ -506,7 +521,13 @@
                   });
                 }
               } catch (error) {
-                console.error("Failed to load local projects:", error);
+                toast({
+                  color: "error",
+                  message: await getLocaleText({
+                    cn: "加载本地项目失败",
+                    en: "Failed to load local projects",
+                  }),
+                });
               }
             }
 
