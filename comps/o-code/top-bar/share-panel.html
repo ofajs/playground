@@ -105,10 +105,11 @@
 
             const files = [];
             const skipDirs = ["node_modules", ".git"];
+            const skipNames = [".git", ".DS_Store", "Thumbs.db"];
 
             const processDir = async (dirHandle, basePath) => {
               for await (let handle of dirHandle.values()) {
-                if (skipDirs.includes(handle.name)) {
+                if (handle.name.startsWith(".") || skipDirs.includes(handle.name)) {
                   continue;
                 }
 
