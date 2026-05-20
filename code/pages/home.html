@@ -15,11 +15,15 @@
           projectPath: "", // 项目路径
         },
         attached() {
-          // 从 searchParams 中获取 hash
           const searchParam = new URLSearchParams(window.location.search);
           const hash = searchParam.get("h");
           if (hash) {
-            this.projectPath = `code-projects/${hash}`;
+            const decodedHash = decodeURIComponent(hash);
+            if (decodedHash.startsWith("$mount-")) {
+              this.projectPath = decodedHash;
+            } else {
+              this.projectPath = `code-projects/${decodedHash}`;
+            }
           }
         },
       };

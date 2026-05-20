@@ -104,6 +104,21 @@
         </locale-text>
       </p-button>
     </div>
+    <o-if :value="canMount">
+      <div style="padding-left: 4px">
+        <p-button
+          variant="outlined"
+          on:click="mountLocalDir"
+          attr:disabled="creating"
+        >
+          <n-icon icon="material-symbols:folder-open" slot="prefix"></n-icon>
+          <locale-text>
+            <span lang="cn">打开本地目录</span>
+            <span lang="en">Open Local Directory</span>
+          </locale-text>
+        </p-button>
+      </div>
+    </o-if>
     <h4>
       <locale-text>
         <span lang="cn">已有的项目</span>
@@ -117,14 +132,30 @@
           button
           on:click="$host.selectOpt($data)"
         >
-          <o-if :value="$data.fromPlayground" slot="prefix">
-            <n-icon icon="ci:code" class="icon"></n-icon>
+          <o-if :value="$data.isLocal" slot="prefix">
+            <n-icon icon="material-symbols:folder-open" class="icon"></n-icon>
           </o-if>
+          <o-else-if :value="$data.fromPlayground" slot="prefix">
+            <n-icon icon="ci:code" class="icon"></n-icon>
+          </o-else-if>
           <o-else slot="prefix">
             <n-icon icon="ix:project" class="icon"></n-icon>
           </o-else>
           {{$data.name}}
-          <o-if :value="$data.fromPlayground" slot="suffix">
+          <o-if :value="$data.isLocal" slot="suffix">
+            <p-button
+              icon
+              size="small"
+              variant="text"
+              on:click="$host.unmountLocalProject($data,$event)"
+              title="Unmount"
+              attr:disabled="$host.creating"
+              style="margin-left: 8px; z-index: 3"
+            >
+              <n-icon icon="material-symbols:link-off"></n-icon>
+            </p-button>
+          </o-if>
+          <o-if :value="$data.fromPlayground && !$data.isLocal" slot="suffix">
             <p-button
               icon
               size="small"
@@ -137,18 +168,19 @@
               <n-icon icon="ic:round-restore"></n-icon>
             </p-button>
           </o-if>
-          <p-button
-            icon
-            size="small"
-            variant="text"
-            on:click="$host.deleteProject($data,$event)"
-            color="error"
-            slot="suffix"
-            attr:disabled="$host.creating || $host.projectPath === $data.path"
-            style="margin-left: 8px; z-index: 3"
-          >
-            <n-icon icon="material-symbols:delete-outline"></n-icon>
-          </p-button>
+          <o-if :value="!$data.isLocal" slot="suffix">
+            <p-button
+              icon
+              size="small"
+              variant="text"
+              on:click="$host.deleteProject($data,$event)"
+              color="error"
+              attr:disabled="$host.creating || $host.projectPath === $data.path"
+              style="margin-left: 8px; z-index: 3"
+            >
+              <n-icon icon="material-symbols:delete-outline"></n-icon>
+            </p-button>
+          </o-if>
         </p-list-item>
       </o-fill>
     </p-list>
@@ -161,7 +193,10 @@
   <script>
     export default async ({ load, url }) => {
       const { get } = await load("/nos/fs/main.js");
-      const { confirm } = await load("/gh/ofajs/Punch-UI/packages/util.js");
+      const { open, unmount } = await load("/nos/fs/handle/mount/mount.js");
+      const { confirm, toast } = await load(
+        "/gh/ofajs/Punch-UI/packages/util.js",
+      );
       const { resetProjectFile } = await load(
         "../../../../code/util/reset-project-file.js",
       );
@@ -205,8 +240,92 @@
               path: "../template/app-case",
             },
           ],
+          canMount: !!window.showDirectoryPicker,
         },
         proto: {
+          async mountLocalDir() {
+            try {
+              const handle = await open({
+                mount: true,
+              });
+
+              let localProject = localStorage.getItem("localPlaygroundProject");
+              if (!localProject) {
+                localProject = [];
+              } else {
+                localProject = JSON.parse(localProject);
+              }
+
+              const exists = localProject.some((p) => p.path === handle.path);
+              if (!exists) {
+                localProject.push({
+                  path: handle.path,
+                  name: handle.name,
+                  isLocal: true,
+                });
+              }
+
+              localStorage.setItem(
+                "localPlaygroundProject",
+                JSON.stringify(localProject),
+              );
+
+              await this.loadProject();
+            } catch (error) {
+              toast({
+                color: "error",
+                message: await getLocaleText({
+                  cn: "挂载本地目录失败",
+                  en: "Failed to mount local directory",
+                }),
+              });
+            }
+          },
+          async unmountLocalProject(item, event) {
+            event.stopPropagation();
+            event.preventDefault();
+
+            const result = await confirm({
+              title: await getLocaleText({
+                cn: "移除本地目录",
+                en: "Remove Local Directory",
+              }),
+              message: await getLocaleText({
+                cn: `确定要移除本地目录 "${item.name}" 吗？文件不会被删除。`,
+                en: `Are you sure you want to remove local directory "${item.name}"? Files will not be deleted.`,
+              }),
+            });
+
+            if (!result) {
+              return;
+            }
+
+            try {
+              const handle = await get(item.path);
+
+              await unmount(handle);
+
+              let localProject = localStorage.getItem("localPlaygroundProject");
+              if (localProject) {
+                localProject = JSON.parse(localProject);
+                localProject = localProject.filter((p) => p.path !== item.path);
+                localStorage.setItem(
+                  "localPlaygroundProject",
+                  JSON.stringify(localProject),
+                );
+              }
+
+              await this.loadProject();
+            } catch (error) {
+              toast({
+                color: "error",
+                message: await getLocaleText({
+                  cn: "解除挂载本地目录失败: " + error.message,
+                  en: "Failed to unmount local directory: " + error.message,
+                }),
+              });
+            }
+          },
           async createProject() {
             this.creating = true;
 
@@ -289,13 +408,13 @@
 
               await this.loadProject();
             } catch (error) {
-              console.error(
-                await getLocaleText({
-                  cn: "删除项目失败:",
-                  en: "Failed to delete project:",
+              toast({
+                color: "error",
+                message: await getLocaleText({
+                  cn: "删除项目失败",
+                  en: "Failed to delete project",
                 }),
-                error,
-              );
+              });
             }
           },
           async restoreCode(item, event) {
@@ -332,61 +451,83 @@
               },
             });
 
-            const projectHash = item.path.split("/").pop();
+            const projectHash = item.isLocal
+              ? item.path
+              : item.path.split("/").pop();
             const isInCode = location.pathname.includes("/code/");
             const targetPath = isInCode
               ? location.pathname
               : location.pathname
                   .replace(/\/index\.html$/, "")
                   .replace(/\/$/, "") + "/code/index.html";
-            location.href = `${location.origin}${targetPath}?h=${projectHash}`;
+            location.href = `${location.origin}${targetPath}?h=${encodeURIComponent(projectHash)}`;
           },
           async loadProject() {
             const handle = await get("code-projects");
 
-            if (!handle || handle.kind !== "dir") {
-              return;
-            }
-
             const list = [];
 
-            for await (let item of handle.values()) {
-              try {
-                const pkgHandle = await item.get("package.json");
+            if (handle && handle.kind === "dir") {
+              for await (let item of handle.values()) {
+                try {
+                  const pkgHandle = await item.get("package.json");
 
-                let name = null;
+                  let name = null;
 
-                if (pkgHandle) {
-                  const data = await pkgHandle.json();
-                  name = data.name;
-                }
-
-                const projectHash = item.path.split("/").pop();
-
-                const originHandle = await get(
-                  `code-origins/${projectHash}.json`,
-                );
-
-                if (!name && originHandle) {
-                  const data = await originHandle.json();
-                  if (data.name) {
+                  if (pkgHandle) {
+                    const data = await pkgHandle.json();
                     name = data.name;
-                  } else if (data.time) {
-                    name = `case-${new Date(data.time).toLocaleString()}`;
                   }
-                }
 
-                if (!name) {
-                  name = item.name;
-                }
+                  const projectHash = item.path.split("/").pop();
 
-                list.push({
-                  path: item.path,
-                  name,
-                  fromPlayground: originHandle ? true : false,
-                });
+                  const originHandle = await get(
+                    `code-origins/${projectHash}.json`,
+                  );
+
+                  if (!name && originHandle) {
+                    const data = await originHandle.json();
+                    if (data.name) {
+                      name = data.name;
+                    } else if (data.time) {
+                      name = `case-${new Date(data.time).toLocaleString()}`;
+                    }
+                  }
+
+                  if (!name) {
+                    name = item.name;
+                  }
+
+                  list.push({
+                    path: item.path,
+                    name,
+                    fromPlayground: originHandle ? true : false,
+                  });
+                } catch (error) {
+                  console.log(error);
+                }
+              }
+            }
+
+            const localProject = localStorage.getItem("localPlaygroundProject");
+            if (localProject) {
+              try {
+                const localList = JSON.parse(localProject);
+                for (const item of localList) {
+                  list.push({
+                    path: item.path,
+                    name: item.name,
+                    isLocal: true,
+                  });
+                }
               } catch (error) {
-                console.log(error);
+                toast({
+                  color: "error",
+                  message: await getLocaleText({
+                    cn: "加载本地项目失败",
+                    en: "Failed to load local projects",
+                  }),
+                });
               }
             }
 
