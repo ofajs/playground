@@ -111,9 +111,6 @@
       const load = lm(import.meta);
 
       $("nos-version").on("installed", () => {
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("mainContent").classList.add("visible");
-
         const params = new URLSearchParams(location.search);
         const redirect = params.get("redirect");
         if (redirect === "w") {
@@ -124,6 +121,9 @@
 
           location.href = `./code/w.html?d=${data}`;
         }
+
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("mainContent").classList.add("visible");
       });
 
       await load("https://core.noneos.com/nos-tool/comps/nos-version.html");
