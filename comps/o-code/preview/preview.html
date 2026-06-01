@@ -186,6 +186,7 @@
   <script>
     export default async ({ load }) => {
       const { get } = await load("/nos/fs/main.js");
+      const { toast } = await load("/gh/ofajs/Punch-UI/packages/util.js");
 
       return {
         data: {
@@ -234,24 +235,31 @@
             this.selectorVisible = false;
           },
           async loadProject(path) {
-            const handle = await get(path);
+            try {
+              const handle = await get(path);
 
-            let list = await searchHtml(handle);
+              let list = await searchHtml(handle);
 
-            list = list.map((path) => {
-              return {
-                realPath: path,
-                path: path.split("/").slice(2).join("/"),
-                url: `/$${path}`,
-              };
-            });
+              list = list.map((path) => {
+                return {
+                  realPath: path,
+                  path: path.split("/").slice(2).join("/"),
+                  url: `/$${path}`,
+                };
+              });
 
-            this.list = list;
+              this.list = list;
 
-            if (this.list.length > 0) {
-              // 默认先看第一个
-              this.selectUrl = this.list[0].url;
-              this.selectedPath = this.list[0].path;
+              if (this.list.length > 0) {
+                this.selectUrl = this.list[0].url;
+                this.selectedPath = this.list[0].path;
+              }
+            } catch (error) {
+              console.error('Failed to load project:', error);
+              toast({
+                color: 'error',
+                message: error.message || 'Failed to load project preview',
+              });
             }
           },
         },

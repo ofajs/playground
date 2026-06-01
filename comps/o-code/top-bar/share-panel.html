@@ -25,6 +25,30 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
+    .warning-container {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .warning-icon {
+      font-size: 48px;
+      color: var(--md-sys-color-error, #f44336);
+      margin-bottom: 16px;
+    }
+
+    .warning-text {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+      margin: 0 0 8px;
+    }
+
+    .warning-hint {
+      font-size: 14px;
+      color: var(--md-sys-color-on-surface-variant, #666);
+      margin: 0;
+    }
   </style>
   <p-dialog :open="open" on:click-mask="open = false">
     <div slot="title">
@@ -34,36 +58,62 @@
       </locale-text>
     </div>
     <div class="container">
-      <p>
-        <locale-text>
-          <span lang="cn">你可以直接复制以下链接分享给他人</span>
-          <span lang="en"
-            >You can copy the link below to share with others</span
-          >
-        </locale-text>
-      </p>
-      <div class="link-container">{{ shareLink }}</div>
-      <p-button
-        variant="outlined"
-        size="small"
-        on:click="clickCopy"
-        attr:disabled="copied"
-        attr:color="copied ? 'success' : 'primary'"
-      >
-        <x-if :value="!copied">
+      <o-if :value="tooLarge">
+        <div class="warning-container">
+          <n-icon icon="material-symbols:warning" class="warning-icon"></n-icon>
+          <p class="warning-text">
+            <locale-text>
+              <span lang="cn">项目代码过大，无法通过链接分享</span>
+              <span lang="en">Project code is too large to share via link</span>
+            </locale-text>
+          </p>
+          <p class="warning-hint">
+            <locale-text>
+              <span lang="cn">请下载项目文件，然后分享给他人</span>
+              <span lang="en">Please download the project files and share them</span>
+            </locale-text>
+          </p>
+          <p-button variant="filled" on:click="clickDownload" style="margin-top: 12px;">
+            <n-icon slot="prefix" icon="material-symbols:download"></n-icon>
+            <locale-text>
+              <span lang="cn">下载项目</span>
+              <span lang="en">Download Project</span>
+            </locale-text>
+          </p-button>
+        </div>
+      </o-if>
+      <o-else>
+        <p>
           <locale-text>
-            <span lang="cn">复制链接</span>
-            <span lang="en">Copy Link</span>
+            <span lang="cn">你可以直接复制以下链接分享给他人</span>
+            <span lang="en"
+              >You can copy the link below to share with others</span
+            >
           </locale-text>
-        </x-if>
-        <x-else>
-          <n-icon slot="prefix" icon="ix:success"></n-icon>
-          <locale-text>
-            <span lang="cn">已复制</span>
-            <span lang="en">Copied</span>
-          </locale-text>
-        </x-else>
-      </p-button>
+        </p>
+        <div class="link-container">{{ shareLink }}</div>
+        <p-button
+          variant="outlined"
+          size="small"
+          on:click="clickCopy"
+          attr:disabled="copied"
+          attr:color="copied ? 'success' : 'primary'"
+        >
+          <x-if :value="!copied">
+            <locale-text>
+              <span lang="cn">复制链接</span>
+              <span lang="en">Copy Link</span>
+            </locale-text>
+          </x-if>
+          <x-else>
+            <n-icon slot="prefix" icon="ix:success"></n-icon>
+            <locale-text>
+              <span lang="cn">已复制</span>
+              <span lang="en">Copied</span>
+            </locale-text>
+          </x-else>
+        </p-button>
+      </o-else>
     </div>
   </p-dialog>
   <o-consumer
@@ -75,6 +125,7 @@
       const { compress } = await load("../../util.js");
       const { get } = await load("/nos/fs/main.js");
       const { toast } = await load("/gh/ofajs/Punch-UI/packages/util.js");
+      const { download } = await load("/nos/fs/download.js");
 
       return {
         data: {
@@ -99,6 +150,11 @@
             setTimeout(() => {
               this.copied = false;
             }, 1000);
+          },
+          async clickDownload() {
+            const handle = await get(this.projectPath);
+            download(handle);
+            this.open = false;
           },
           async loadCode() {
             const projectHandle = await get(this.projectPath);
