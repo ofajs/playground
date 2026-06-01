@@ -288,14 +288,16 @@
             const hash = searchParam.get("h");
 
             const originHandle = await get(`code-origins/${hash}.json`);
-            const originData = await originHandle.json();
 
-            // 选中激活项目
-            const activePath = `${this.projectPath}/${originData.active}`;
-            const item = this.files.find((e) => e.path === activePath);
+            if (originHandle) {
+              const originData = await originHandle.json();
+              // 选中激活项目
+              const activePath = `${this.projectPath}/${originData.active}`;
+              const item = this.files.find((e) => e.path === activePath);
 
-            if (item) {
-              this.clickItem(item);
+              if (item) {
+                this.clickItem(item);
+              }
             }
           }, 300);
         },
